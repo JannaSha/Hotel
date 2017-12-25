@@ -1,0 +1,31 @@
+
+spring:
+  application:
+    name: users-server
+
+# HTTP Server
+server:
+  port: 1111   # HTTP (Tomcat) port
+
+#  cloud:
+#    services:
+#      registrationMethod: route
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8080/eureka
+  instance:
+    preferIpAddress: true
+
+# Connect timeout used by Apache HttpClient
+#ribbon:
+#  ConnectTimeout: 3000
+
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 10000

@@ -1,0 +1,17 @@
+# Spring properties
+spring:
+  application:
+     name: order-server
+
+# Discovery Server Access
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8080/eureka/
+
+
+# HTTP Server
+server:
+  port: 5555   # HTTP (Tomcat) port
