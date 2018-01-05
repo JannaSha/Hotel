@@ -10,6 +10,15 @@ hotel/.idea/**/workspace.xml
 hotel/.idea/**/tasks.xml
 */.idea/dictionaries
 
+
+*.pyc
+*~
+__pycache__
+client/client_env
+client/db.sqlite3
+client/static
+.DS_Store
+
 .idea
 # Sensitive or high-churn files:
 .idea/**/dataSources/
