@@ -1,0 +1,48 @@
+{% load staticfiles %}
+
+<html>
+  <head>
+  {% block head %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-theme.min.css' %}"> 
+    <link rel="stylesheet" href="{% static 'css/font-awesome.css' %}"> 
+    <link rel="stylesheet" href="{% static 'css/bootstrap-social.css' %}">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans|Ubuntu" rel="stylesheet">
+  <title>{% block title %}MyHotel{% endblock %}</title>
+  {% endblock %}
+  </head>
+  
+  <body>
+    <div class="main">
+      {% block search %}
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <nav role="navigation" class="navbar navbar-default">
+            <div class="navbar-header">
+              <button type="button" data-target="#navbarCollapse" data-toggle="collapse" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+            </div>
+            <div id="navbarCollapse" class="collapse navbar-collapse">
+              <ul class="nav navbar-nav">
+                <li><a href="/hotel/rooms/page=0&size=10">Номера</a></li>
+                <li><a href="/hotel/index">Типы номеров</a></li>
+                <li><a href="/hotel/order/">Бронирование</a></li>
+              </ul>
+            </div>
+          </nav>
+        </div>
+        <div class="title page-header col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <h1>MyHotel</h1>
+        </div>
+
+      {% endblock search %}
+    </div>
+  </body>
+    
+  {% block body %}
+  {% endblock %}
+
+</html>

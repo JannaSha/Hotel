@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'hotel',
 ]
 
 MIDDLEWARE = [
@@ -54,7 +55,7 @@ ROOT_URLCONF = 'hotelclient.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -66,6 +67,9 @@ TEMPLATES = [
         },
     },
 ]
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'static'),
+)
 
 WSGI_APPLICATION = 'hotelclient.wsgi.application'
 
@@ -80,6 +84,12 @@ DATABASES = {
     }
 }
 
+
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+# DEFAULT_PRODUCT_IMG = os.path.join(MEDIA_ROOT, 'products/default.jpg')
+# DEFAULT_BRANDS_IMG = os.path.join(MEDIA_ROOT, 'brands/default_brands.jpg')
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators

@@ -1,0 +1,40 @@
+.order-icon {
+  display: inline-block;
+  position: relative;
+  font-family: 'Open Sans', sans-serif;
+  padding: 3%;
+  font-size: 20px;
+}
+
+.page-head {
+  font-family: 'Open Sans', sans-serif;
+  padding-left: 2%;
+}
+
+.make-order {
+  padding-left: 35%;
+  padding-top: 1%;
+}
+
+.btn {
+  border: 0 none;
+  letter-spacing: 1px;
+  font-family: 'Open Sans', sans-serif;
+  color: white;
+}
+
+.btn:focus, .btn:active:focus, .btn.active:focus {
+  outline: 0 none;
+}
+ 
+.btn-primary {
+  background: rgba(10, 73, 86, 1);
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open > .dropdown-toggle.btn-primary {
+  background: rgba(10, 73, 86, 1);
+}
+
+.btn-primary:active, .btn-primary.active {
+  background: rgba(10, 73, 86, 1);
+}

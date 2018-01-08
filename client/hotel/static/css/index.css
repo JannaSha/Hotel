@@ -1,0 +1,39 @@
+.item-icon {
+  display: inline-block;
+  position: relative;
+  font-family: 'Open Sans', sans-serif;
+  
+  margin-right: 1%;
+  margin-bottom: 1%;
+}
+
+.item-icon
+.item-description {
+  display: block;
+  position: absolute;
+
+  top: 0;
+  width: 100%;
+  box-sizing:border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box; 
+
+  color: white;
+  padding: 5%;
+  background-color: rgba(10, 73, 86, 0.6);
+
+}
+
+.modal-header h4, p {
+  color: black;
+}
+.modal-footer button {
+  font-family: 'Open Sans', sans-serif;
+  background-color: rgba(10, 73, 86, 1);
+  color: white;
+}
+
+#gggg {
+  color: white;
+}

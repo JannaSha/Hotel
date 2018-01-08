@@ -1,0 +1,40 @@
+.page-header {
+  margin: 1%;
+  padding: 1%;
+
+  width: 100%;
+  font-family: 'Ubuntu', sans-serif;
+}
+
+.navbar-header,
+#navbarCollapse {
+  background-color: rgba(10, 73, 86, 1);
+}
+
+#navbarCollapse a {
+  color: white;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 17px;
+}
+
+.title {
+  padding-left: 1%;
+  padding-top: 1%;
+  padding-bottom: 1%;
+}
+
+.title a {
+  margin-left: 2%;
+  font-family: 'Open Sans', sans-serif;
+  color: black;
+  font-style: normal;
+  font-size: 40px;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}

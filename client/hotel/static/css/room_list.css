@@ -1,0 +1,28 @@
+.room-icon {
+  display: inline-block;
+  position: relative;
+  
+  margin-right: 0%;
+  margin-bottom: 1%;
+}
+
+.room-description {
+  display: block;
+  position: absolute;
+
+  top: 0;
+  width: 100%;
+/*  box-sizing:border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box; */
+  font-family: 'Open Sans', sans-serif;
+  color: black;
+  padding: 5%;
+  font-weight: bold;
+}
+
+.rooms {
+  padding: 1%;
+  width: 100%;
+}

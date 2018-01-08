@@ -19,6 +19,8 @@ client/db.sqlite3
 client/static
 .DS_Store
 
+*.png
+*.jpg
 .idea
 # Sensitive or high-churn files:
 .idea/**/dataSources/

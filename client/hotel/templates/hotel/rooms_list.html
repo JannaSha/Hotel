@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block head %}
+{{ block.super }}
+ <meta charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/room_list.css' %}">
+ {% endblock head %}
+
+{% block title %}MyHotel: Список номеров{% endblock title %}
+
+{% block body %}
+  <div class="row rooms">
+    {% for room in rooms %}
+      <div class="room-icon col-xs-6 col-sm-2 col-md-2 col-lg-1">
+        {% if room.vacant %}
+          <img src="{% static "home.png" %}" alt="image" class="product-img img-rounded img-responsive left-block"/>
+        {% else %}
+          <img src="{% static "cancel.png" %}" alt="image" class="product-img img-rounded img-responsive left-block"/>
+        {% endif %}
+        <div class="room-description">
+          <h5>№{{ room.id }}</h5>
+          <h5>Тип {{ room.roomType }}</h5>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock body %}
+
