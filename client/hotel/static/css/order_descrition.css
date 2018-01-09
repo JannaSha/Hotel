@@ -1,36 +1,39 @@
 
-.error-message{
+.description {
+  /*display: inlin-block;*/
+  /*position: relative;*/
+  font-family: 'Open Sans', sans-serif;
+  padding-left: 3%;
+  /*font-size: 20px;*/
+}
+
+.delete-order {
+  padding-left: 10%;
+}
+
+.error-message, .no-modify{
   font-family: 'Open Sans', sans-serif;
   color: red;
   padding: 1%;
-}
-.order-icon {
-  display: inlin-block;
-  position: relative;
-  font-family: 'Open Sans', sans-serif;
-  padding: 3%;
-  font-size: 20px;
-}
-.order-icon a {
-  font-family: 'Open Sans', sans-serif;
-  color: rgba(10, 73, 86, 1);
+  font-size: 15px;
 }
 
-.page-head {
+.modify-form {
   font-family: 'Open Sans', sans-serif;
-  padding-left: 2%;
+  padding-left: 3%;
+  padding-top: 3%;
 }
 
-.make-order {
-  padding-left: 30%;
-  padding-top: 1%;
+.modify-form {
+  font-family: 'Ubuntu', sans-serif;
 }
 
 .btn {
   border: 0 none;
   letter-spacing: 1px;
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Ubuntu', sans-serif;
   color: white;
+  /*font-size: 18px;*/
 }
 
 .btn:focus, .btn:active:focus, .btn.active:focus {

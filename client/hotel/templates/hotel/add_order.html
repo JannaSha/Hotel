@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% load staticfiles %}
+{% load static %} 
+{% block head %}
+{{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/add_order.css' %}">
+{% endblock head %}
+
+{% block title %}MyHotel: Сделать заказ{% endblock title %}
+
+{% block body %}
+  <div class="head-page">
+    <h1>Создание заказа</h1>
+  </div>
+  <div class="order-form">
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_table }}
+      <button type="submit" class="btn btn-primary">Создать</button>
+    </form>
+  </div>
+  {% if error  %}
+  <div class="error-message">
+    Ошибка при создании заказа: {{ error }}
+  </div>
+  {% endif %}
+{% endblock body %}

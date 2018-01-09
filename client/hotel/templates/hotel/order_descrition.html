@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block head %}
+{{ block.super }}
+ <meta charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/order_descrition.css' %}">
+ {% endblock head %}
+
+{% block title %}MyHotel: Заказ {{ order.id }} {% endblock title %}
+
+{% block body %}
+{% if mainerror %}
+  <h3 class="error-message">Ошибка: {{ mainerror }}</h3>
+{% else %}
+  <div class="row orders">
+    <div class="description col-xs-12 col-sm-6 col-md-6 col-lg-6">
+      <h2>Заказ № {{ order.id }}</h2>
+        <div class="order-description">
+          <h5>Номер {{ order.roomId }}</h5>
+          <h5>Дата заказа: {{ order.orderDate }}</h5>
+          <h5>Количество ночей: {{ order.nightAmount }}</h5>
+          <h5>Стоимость заказа: {{ order.cost }}₽</h5>
+          <h5>Дата заезда: {{ order.arrivalDate }}</h5>
+          {% if order.billId > 0 %}
+            <h5>Оплата: Оплачено</h5>
+          {% else %}
+            <h5>Оплата: Неоплаченно</h5>
+          {% endif %}
+      </div>
+    </div>
+    <div class="delete-order col-xs-12 col-sm-6 col-md-6 col-lg-6">
+      <button type="button" class="btn btn-primary btn-lg" onclick="location.href='http://localhost:8000/hotel/order/{{ order.id }}/delete'">Удалить бронь</button>
+    </div>
+ </div>
+ {% if order.billId > 0 %}
+   <h3 class="no-modify">Редактирование данного бронирования невозможно, так как оно оплаченно</h3>
+ {% else %}
+  <div class="row modify-order">
+    <form method="post" class="modify-form">
+      {% csrf_token %}
+      {{ form.as_table }}
+      <button type="submit" class="btn btn-primary">Изменить бронирование</button>
+    </form>
+ </div>
+ {% endif %}
+
+ {% if error %}
+  <h3 class="error-message">Ошибка: {{ error }}</h3>
+ {% endif %}
+ {% endif %}
+{% endblock body %}

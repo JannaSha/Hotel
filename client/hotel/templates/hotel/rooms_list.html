@@ -11,6 +11,9 @@
 {% block title %}MyHotel: Список номеров{% endblock title %}
 
 {% block body %}
+{% if error %}
+  <h3 class="error-message">Ошибка: {{ error }}</h3>
+{% else %}
   <div class="row rooms">
     {% for room in rooms %}
       <div class="room-icon col-xs-6 col-sm-2 col-md-2 col-lg-1">
@@ -26,5 +29,6 @@
       </div>
     {% endfor %}
   </div>
+{% endif %}
 {% endblock body %}
 

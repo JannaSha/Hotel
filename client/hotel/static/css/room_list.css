@@ -6,6 +6,11 @@
   margin-bottom: 1%;
 }
 
+.error-message{
+  font-family: 'Open Sans', sans-serif;
+  color: red;
+  padding: 1%;
+}
 .room-description {
   display: block;
   position: absolute;

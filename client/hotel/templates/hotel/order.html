@@ -8,27 +8,31 @@
     <link rel="stylesheet" href="{% static 'css/order.css' %}">
  {% endblock head %}
 
-{% block title %}MyHotel: Список заказов{% endblock title %}
+{% block title %}MyHotel: Список заказов {% endblock title %}
 
 {% block body %}
+{% if error %}
+  <h3 class="error-message">Ошибка: {{ error }}</h3>
+{% else %}
   <div class="row page-head">
     <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
       <h2>Список заказов</h2>
     </div>
     <div class="make-order col-xs-12 col-sm-4 col-md-4 col-lg-4">
-      <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#MyButton">Сделать заказ</button>
+      <button type="button" class="btn btn-primary btn-lg" onclick="location.href='http://localhost:8000/hotel/order/create'">Новое бронирование</button>
     </div class="order-icon col-xs-12 col-sm-6 col-md-6 col-lg-6">
   </div>
   <div class="row orders">
     {% for order in orders %}
       <div class="order-icon col-xs-12 col-sm-4 col-md-4 col-lg-4">
         <div class="order-description">
-          <h5>Заказ № {{ order.id }}</h5>
+          <a href="http://localhost:8000/hotel/order/{{ order.id }}">Заказ № {{ order.id }}</a>
           <h5>Номер {{ order.roomId }}  : {{ order.roomType.typeName }}</h5>
           <h5>Дата заказа: {{ order.orderDate }}</h5>
           <h5>Количество ночей: {{ order.nightAmount }}</h5>
+          <h5>Дата заезда: {{ order.arrivalDate }}</h5>
           <h5>Стоимость заказа: {{ order.cost }}₽</h5>
-          {% if billId and billId > 0 %}
+          {% if order.bill  %}
             <h5>Оплата: Оплачено</h5>
           {% else %}
             <h5>Оплата: Неоплаченно</h5>
@@ -37,4 +41,5 @@
       </div>
     {% endfor %}
   </div>
+{% endif %}
 {% endblock body %}

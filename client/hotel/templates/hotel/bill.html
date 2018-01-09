@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block head %}
+{{ block.super }}
+ <meta charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/order_descrition.css' %}">
+ {% endblock head %}
+
+{% block title %}MyHotel: Список заказов {% endblock title %}
+
+{% block body %}
+{% if mainerror %}
+  <h3 class="error-message">Ошибка: {{ mainerror }}</h3>
+{% else %}
+  <div class="row modify-order">
+    <form method="post" class="modify-form">
+      {% csrf_token %}
+      {{ form.as_table }}
+      <button type="submit" class="btn btn-primary">Оплатить бронирование</button>
+    </form>
+   </div>
+  {% if error %}
+     <h3 class="error-message">Ошибка: {{ error }}</h3>
+  {% endif %}
+
+ {% if good %}
+    <h3 class="good-message">{{ good }}</h3>
+ {% endif %}
+{% endif %}
+{% endblock body %}

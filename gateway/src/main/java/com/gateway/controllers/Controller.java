@@ -267,21 +267,19 @@ public class Controller {
     /* Создание заказа для авторизованного пользователя */
     @RequestMapping(method = RequestMethod.POST, value = "/user/{userId}/order",
             consumes = "application/json", produces="application/json")
-    public ResponseEntity<Object> createOrder(@PathVariable("userId") long userId,
+    public ResponseEntity<Order> createOrder(@PathVariable("userId") long userId,
                                              @RequestBody @Valid OrderCreator orderCreator) {
-
+        System.out.println("Im here");
         ResponseEntity<User> responseUser = handle(() -> usersClient.findOne(userId), "users");
         if (responseUser.getStatusCode() == HttpStatus.NOT_FOUND) {
             log.error(String.format("POST/user/%d/order: User does not exist. %s",
                     userId, HttpStatus.UNAUTHORIZED.toString()));
-            return new ResponseEntity<>(new ErrorEntity(HttpStatus.UNAUTHORIZED.value(),
-                    responseUser.getStatusCode().toString()), HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         if (responseUser.getStatusCode() != HttpStatus.OK) {
             log.error(String.format("POST/user/%d/order: Other error (user service). %s",
                     userId, responseUser.getStatusCode().toString()));
-            return new ResponseEntity<>(new ErrorEntity(responseUser.getStatusCode().value(),
-                    responseUser.getStatusCode().toString()), responseUser.getStatusCode());
+            return new ResponseEntity<>(responseUser.getStatusCode());
         }
 
         ResponseEntity<RoomType> roomTypeResponse =
@@ -326,24 +324,24 @@ public class Controller {
                 roomTypeResponse.getBody(), newRoomType, newUser);
 
         if (orderResponseEntityTemp.getStatusCode() != HttpStatus.OK) {
-            return orderResponseEntityTemp;
+            return new ResponseEntity<>(orderResponseEntityTemp.getStatusCode());
         }
         Order order = (Order) orderResponseEntityTemp.getBody();
         order.setArrivalDate(orderCreator.getArrivalDate());
         order.setNightAmount(orderCreator.getNightAmount());
         order.setCost(getPrice(orderCreator.getNightAmount(),
                 roomTypeResponse.getBody().getPrice(), responseUser.getBody().getOrdersAmount()));
-
-//        orderResponseEntityTemp = handle(() -> ordersClient.createOrder(tempOrderFinal));
-        if (orderResponseEntityTemp.getStatusCode() != HttpStatus.CREATED) {
+        Order tempOrder = order;
+        ResponseEntity<Order> orderResponseEntity = handle(() -> ordersClient.createOrder(tempOrder), "order");
+        if (orderResponseEntity.getStatusCode() != HttpStatus.CREATED) {
             log.error(String.format("POST/user/%d/order: Error create order. %s",
-                    userId, orderResponseEntityTemp.getStatusCode().toString()));
+                    userId, orderResponseEntity.getStatusCode().toString()));
             handle(() -> roomsTypeClient.modifyRoomType(
                     roomTypeResponse.getBody().getId(), roomTypeResponse.getBody()), "room types");
             handle(() -> roomClient.modifyRoom(roomResponse.getBody()[0].getId(), roomResponse.getBody()[0]),
                     "rooms");
             handle(() -> usersClient.modifyUser(responseUser.getBody().getId(), responseUser.getBody()), "users");
-            return orderResponseEntityTemp;
+            return orderResponseEntity;
         }
         order = (Order) orderResponseEntityTemp.getBody();
         log.info(String.format("POST/user/%d/order: Order = %d create successfully. %s",
