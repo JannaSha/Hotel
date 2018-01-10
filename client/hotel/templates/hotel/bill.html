@@ -21,12 +21,12 @@
       <button type="submit" class="btn btn-primary">Оплатить бронирование</button>
     </form>
    </div>
-  {% if error %}
-     <h3 class="error-message">Ошибка: {{ error }}</h3>
-  {% endif %}
-
- {% if good %}
-    <h3 class="good-message">{{ good }}</h3>
+ {% if error and error == "good" %}
+    <h3 class="good-message">Заказ успешно оплачен</h3>
+ {% else %}
+   {% if error %}
+      <h3 class="error-message">Ошибка: {{ error }}</h3>
+    {% endif %}
  {% endif %}
 {% endif %}
 {% endblock body %}

@@ -33,7 +33,7 @@
           <h5>Дата заезда: {{ order.arrivalDate }}</h5>
           <h5>Стоимость заказа: {{ order.cost }}₽</h5>
           {% if order.bill  %}
-            <h5>Оплата: Оплачено</h5>
+            <h5>Оплата: Оплачено, карта №{{ order.bill.cartNumber }}</h5>
           {% else %}
             <h5>Оплата: Неоплаченно</h5>
           {% endif %}

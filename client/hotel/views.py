@@ -80,7 +80,7 @@ def make_order(request):
             error = None
             if data['roomTypeId'] < 0 or data['nightAmount'] <= 0:
                 error = 'Тип комнаты и количесво ночей должны принимать значения больше 0'
-            if data['arrivalDate'] < datetime.date.today():
+            if data['arrivalDate'] <= datetime.date.today():
                 error = 'Дата прибытия должна быть позже текущей'
             if error is None:
                 day = str(data['arrivalDate'].day)
@@ -121,22 +121,35 @@ def show_order(request, order_id):
     if request.method == 'POST':
         form = OrderModifyForm(request.POST)
         if form.is_valid():
+            error = None
             data = form.cleaned_data
-            day = str(data['arrivalDate'].day)
-            month = str(data['arrivalDate'].month)
-            if len(day) == 1:
-                day = "0" + day
-            if len(month) == 1:
-                month = "0" + month
-            arrivalDate = str(data['arrivalDate'].year) + ":" + month + ":" + day + "/00:00:00"
-            string = '{\"nightAmount\":' +str(data['nightAmount']) + ', \"arrivalDate\":\"' + arrivalDate + '\"' + '}'
-            try:
-                response = requests.put('http://localhost:1212/hotel/user/1/order/' + order_id, data=string, headers={'content-type': 'application/json'})
-            except Exception:
-                return render(request, 'hotel/order_descrition.html', {'mainerror':'Сервис недоступен'})
-            if response.status_code != requests.codes.ok:
-                return render(request, 'hotel/order_descrition.html', {'error':get_message(response.status_code), 'order':order, 'form':form})
-            return redirect('/hotel/order/')
+            if data['arrivalDate'] <= datetime.date.today():
+                error = 'Дата прибытия должна быть позже текущей'
+            if data['nightAmount'] <= 0:
+                error = 'Количество ночей должно быть больше 0'
+            if error is None:
+                day = str(data['arrivalDate'].day)
+                month = str(data['arrivalDate'].month)
+                if len(day) == 1:
+                    day = "0" + day
+                if len(month) == 1:
+                    month = "0" + month
+                arrivalDate = str(data['arrivalDate'].year) + ":" + month + ":" + day + "/00:00:00"
+                string = '{\"nightAmount\":' +str(data['nightAmount']) + ', \"arrivalDate\":\"' + arrivalDate + '\"' + '}'
+                try:
+                    response = requests.put('http://localhost:1212/hotel/user/1/order/' + order_id, data=string, headers={'content-type': 'application/json'})
+                except Exception:
+                    return render(request, 'hotel/order_descrition.html', {'mainerror':'Сервис недоступен'})
+                if response.status_code != requests.codes.ok:
+                    return render(request, 'hotel/order_descrition.html', {'error':get_message(response.status_code), 'order':order, 'form':form})
+                return redirect('/hotel/order/')
+            else:
+                context = {'order':order, 'form':form, 'error':error}
+                return render(request, 'hotel/order_descrition.html', context)
+        else:
+            form = OrderModifyForm()
+            context = {'order':order, 'form':form, 'error':'Введите корректные данные'}
+            return render(request, 'hotel/order_descrition.html', context)
     else:
         form = OrderModifyForm()
     context = {'order':order, 'form':form}
@@ -157,13 +170,16 @@ def bill_order(request):
                 response = requests.post(url, data=string, headers={'content-type': 'application/json'})
             except Exception:
                 return render(request, 'hotel/bill.html', {'mainerror':'Сервис недоступен'})
-            if response.status_code == 400:
+            print("code = ", response.status_code)
+            if response.status_code == 406:
                 return render(request, 'hotel/bill.html', {'error':'Бронирование уже оплаченно', 'form':form})
             if response.status_code == 404:
                 return render(request, 'hotel/bill.html', {'error':'Брони с таким номером не существует', 'form':form})
-            if response.status_code != requests.codes.ok:
+            if response.status_code == 400:
+                return render(request, 'hotel/bill.html', {'error':'Невозможно оплатить заказ с прошедшей датой прибытия', 'form':form})
+            if response.status_code != requests.codes.created:
                 return render(request, 'hotel/bill.html', {'error':get_message(response.status_code), 'form':form})
-            return render(request, 'hotel/bill.html', {'good':'Бронирование успешно оплачено!', 'form':form})
+            return render(request, 'hotel/bill.html', {'error':'good', 'form':form})
     else:
         form = BillForm()
     return render(request, 'hotel/bill.html', {'form':form})

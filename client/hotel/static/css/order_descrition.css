@@ -11,10 +11,16 @@
   padding-left: 10%;
 }
 
+.good-message {
+  font-family: 'Open Sans', sans-serif;
+  color: green;
+  padding: 2%;
+  font-size: 15px;
+}
 .error-message, .no-modify{
   font-family: 'Open Sans', sans-serif;
   color: red;
-  padding: 1%;
+  padding: 2%;
   font-size: 15px;
 }
 

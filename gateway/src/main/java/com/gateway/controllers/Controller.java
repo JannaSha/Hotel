@@ -389,8 +389,8 @@ public class Controller {
         }
         if (orderResponseEntity.getBody().getBillId() != -1) {
             log.error(String.format("POST/user/%d/order/%d/billing: Order has already paid. %s",
-                    userId, orderId, HttpStatus.BAD_REQUEST));
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    userId, orderId, HttpStatus.NOT_ACCEPTABLE));
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
         }
         Order tempOrder = orderResponseEntity.getBody();
         ResponseEntity<Billing> responseEntityBilling =
@@ -400,11 +400,11 @@ public class Controller {
                     userId, orderId, responseEntityUser.getStatusCode().toString()));
             return new ResponseEntity<>(responseEntityBilling.getStatusCode());
         }
-        orderResponseEntity.getBody().setBillId(responseEntityBilling.getBody().getId());
+        tempOrder.setBillId(responseEntityBilling.getBody().getId());
         orderResponseEntity = handle(() -> ordersClient.modifyOrder(orderId, tempOrder), "orders");
         if (orderResponseEntity.getStatusCode() != HttpStatus.OK) {
             log.error(String.format("POST/user/%d/order/%d/billing: Error modify order (order service). %s",
-                    userId, orderId, responseEntityUser.getStatusCode().toString()));
+                    userId, orderId, orderResponseEntity.getStatusCode().toString()));
             handleDelete(() -> billClient.delete(responseEntityBilling.getBody().getId()));
             return new ResponseEntity<>(orderResponseEntity.getStatusCode());
         }
