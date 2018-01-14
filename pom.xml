@@ -13,6 +13,7 @@
         <module>users</module>
         <module>registration</module>
         <module>orders</module>
+        <module>auth</module>
     </modules>
 
     <name>hotel Maven Webapp</name>

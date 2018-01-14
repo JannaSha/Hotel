@@ -28,6 +28,14 @@ public class User implements Serializable{
     @Min(0)
     private Integer ordersAmount;
 
+    @NotNull
+    @Column(name = "username")
+    private String username;
+
+    @NotNull
+    @Column(name = "password")
+    private String password;
+
     public long getId() {
         return id;
     }
@@ -70,12 +78,15 @@ public class User implements Serializable{
         this.ordersAmount = ordersAmount;
     }
 
-    public User(long id, long passportNumber, String firstName, String lastName, Integer ordersAmount) {
+    public User(long id, long passportNumber, String firstName, String lastName, Integer ordersAmount,
+                String password, String username) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.passportNumber = passportNumber;
         this.ordersAmount = ordersAmount;
+        this.password = password;
+        this.username = username;
     }
 
     public User(User obj){

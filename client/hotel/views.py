@@ -69,6 +69,7 @@ def show_orders(request):
         context = {'error':get_message(response.status_code)}
     else:
         orders = response.json()
+        orders.sort(key=lambda d: d['id'])
         context = {'orders':orders}
     return render(request, 'hotel/order.html', context)
 

@@ -1,11 +1,16 @@
 
 spring:
   application:
-    name: users-server
+    name: auth-server
+  datasource:
+      url: jdbc:postgresql://localhost/hotel_users_db
+      username: zannasapoval
+      password: mypasswordforsql
+      driver-class: org.postgresql.Driver
 
 # HTTP Server
 server:
-  port: 1111   # HTTP (Tomcat) port
+  port: 8081   # HTTP (Tomcat) port
 #  cloud:
 #    services:
 #      registrationMethod: route

@@ -2,7 +2,6 @@ package com.users.controllers;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.users.controllers.UserController;
 import com.users.models.User;
 import com.users.repos.UserRepository;
 import org.junit.Before;

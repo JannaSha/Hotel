@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+
 import javax.validation.Valid;
 import java.util.List;
 
@@ -29,6 +30,7 @@ public class UserController {
     private JSONPObject getJSONObject(String message) {
         return new JSONPObject("message", message);
     }
+
 
     @RequestMapping(method = RequestMethod.POST, value = "/create", consumes = "application/json",
             produces="application/json")
@@ -169,6 +171,7 @@ public class UserController {
         }
         return response;
     }
+
 
 
 }

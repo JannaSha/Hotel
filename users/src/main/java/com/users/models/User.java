@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "users")
-public class User implements Serializable{
+public class User implements Serializable {
 
     @Id
     @Min(0)
@@ -65,6 +65,13 @@ public class User implements Serializable{
         this.ordersAmount = ordersAmount;
     }
 
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public void setPassportNumber(long passportNumber) {
+        this.passportNumber = passportNumber;
+    }
 
     public User() {};
 

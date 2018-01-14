@@ -42,9 +42,9 @@ public class OrderController {
         ResponseEntity<Order> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
-        if (order.getOrderDate() == null) {
-            order.setOrderDate(Timestamp.from(Instant.now()));
-        }
+        order.setOrderDate(new Timestamp(System.currentTimeMillis()));
+        System.out.println("Current = "+ order.getOrderDate().toString());
+
         if (!repository.exists(order.getId())) {
             if (repository.save(order) != null) {
                 headers.setLocation(ServletUriComponentsBuilder

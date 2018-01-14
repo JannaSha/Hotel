@@ -16,6 +16,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -152,8 +153,6 @@ public class Controller {
         });
     }
 
-
-    /* Получение всех комнат в отеле */
     @RequestMapping(method = RequestMethod.GET, value = "/rooms",
             params = {"page", "size"}, produces="application/json")
     public Object getAllRooms(@RequestParam("page") Integer page, @RequestParam("size") Integer size){
@@ -179,7 +178,9 @@ public class Controller {
     /* Получение описания заказа авторизованным пользователем */
     @RequestMapping(method = RequestMethod.GET, value = "/user/{userId}/order/{orderId}", produces="application/json")
     public ResponseEntity<Order> getUserOrder(@PathVariable("userId") long userId,
-                                              @PathVariable("orderId") long orderId) {
+                                              @PathVariable("orderId") long orderId,
+                                              HttpServletRequest request) {
+        System.out.println(request.getHeader("Authorization"));
         ResponseEntity<User> responseEntityUser = handle(() -> usersClient.findOne(userId), "users");
         if (responseEntityUser.getStatusCode() == HttpStatus.NOT_FOUND) {
             log.error(String.format("GET/user/%d/order/%d: User does not exist. %s",

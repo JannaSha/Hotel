@@ -1,10 +1,23 @@
+spring:
+  application:
+    name: gateway-server
+  datasource:
+    url: jdbc:postgresql://localhost/hotel_users_db
+    username: zannasapoval
+    password: mypasswordforsql
+    driver-class: org.postgresql.Driver
+
+#security:
+#  oauth2:
+#    resource:
+#      user-info-uri: http://localhost:1111/user/current
+
+
 # HTTP Server
 server:
   port: 1212   # HTTP (Tomcat) port
 
-spring:
-  application:
-    name: gateway-server
+
 #  cloud:
 #    services:
 #      registrationMethod: route
