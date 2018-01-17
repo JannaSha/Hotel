@@ -2,9 +2,12 @@ from django.shortcuts import render
 from django.shortcuts import redirect
 import urllib.request
 import requests
-from .forms import OrderForm, OrderModifyForm, BillForm
+from .forms import OrderForm, OrderModifyForm, BillForm, AuthForm
 import datetime
-
+import base64
+from django.http import HttpResponse
+from django.template import loader
+import datetime
 
 def get_message(code):
     if code == 503:
@@ -59,9 +62,16 @@ def show_rooms_type(request, page, size):
     return render(request, 'hotel/index.html', context)
 
 def show_orders(request):
-    url = 'http://localhost:1212/hotel/user/1/orders'
+    if not 'username' in request.COOKIES or not 'password' in request.COOKIES or not 'access_token' in request.COOKIES or \
+        not 'refresh_token' in request.COOKIES or not 'scope' in request.COOKIES:
+        return redirect('/hotel/auth')
+    username = request.COOKIES['username']
+    scope = request.COOKIES['scope']
+    token = request.COOKIES['access_token']
+    url = 'http://localhost:1212/hotel/user/' + username + '/orders'
+    header = {'authorization': 'Bearer ' + token, 'scope': scope}
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=header)
     except Exception:
         context = {'error':'Сервис недоступен'}
         return render(request, 'hotel/order.html', context)
@@ -74,6 +84,9 @@ def show_orders(request):
     return render(request, 'hotel/order.html', context)
 
 def make_order(request):
+    if not 'username' in request.COOKIES or not 'password' in request.COOKIES or not 'access_token' in request.COOKIES or \
+        not 'refresh_token' in request.COOKIES or not 'scope' in request.COOKIES:
+        return redirect('/hotel/auth')
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
@@ -93,10 +106,19 @@ def make_order(request):
                 arrivalDate = str(data['arrivalDate'].year) + ":" + month + ":" + day + "/00:00:00"
                 data['arrivalDate'] = arrivalDate
                 string = '{\"nightAmount\":' +str(data['nightAmount']) + ', \"arrivalDate\":\"' + arrivalDate + '\", \"roomTypeId\":' + str(data['roomTypeId'])+'}'
-                url = 'http://localhost:1212/hotel/user/1/order'
+                username = request.COOKIES['username']
+                scope = request.COOKIES['scope']
+                token = request.COOKIES['access_token']
+                url = 'http://localhost:1212/hotel/user/' + username + '/order'
+                header = {'authorization': 'Bearer ' + token, 'scope': scope}
                 headers = {'content-type': 'application/json'}
+                headers.update(header)
                 try:
+                    print("AMA HERE")
+                    print(url)
+                    print(headers)
                     response = requests.post(url, data=string, headers=headers)
+                    print("CODE = ", response.status_code)
                 except Exception:
                     context = {'form':form, 'error':'Сервис недоступен'}
                 if response.status_code != requests.codes.created:
@@ -111,9 +133,16 @@ def make_order(request):
 
 
 def show_order(request, order_id):
-    url = 'http://localhost:1212/hotel/user/1/order/' + order_id
+    if not 'username' in request.COOKIES or not 'password' in request.COOKIES or not 'access_token' in request.COOKIES or \
+        not 'refresh_token' in request.COOKIES or not 'scope' in request.COOKIES:
+        return redirect('/hotel/auth')
+    username = request.COOKIES['username']
+    scope = request.COOKIES['scope']
+    token = request.COOKIES['access_token']
+    url = 'http://localhost:1212/hotel/user/' + username + '/order/' + order_id
+    header = {'authorization': 'Bearer ' + token, 'scope': scope}
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=header)
     except Exception:
         return render(request, 'hotel/order_descrition.html', {'mainerror':'Сервис недоступен'})
     if response.status_code != requests.codes.ok:
@@ -138,7 +167,10 @@ def show_order(request, order_id):
                 arrivalDate = str(data['arrivalDate'].year) + ":" + month + ":" + day + "/00:00:00"
                 string = '{\"nightAmount\":' +str(data['nightAmount']) + ', \"arrivalDate\":\"' + arrivalDate + '\"' + '}'
                 try:
-                    response = requests.put('http://localhost:1212/hotel/user/1/order/' + order_id, data=string, headers={'content-type': 'application/json'})
+                    temp_header = {'content-type': 'application/json'}
+                    temp_header.update(header)
+                    response = requests.put('http://localhost:1212/hotel/user/' + username + '/order/' + order_id, 
+                        data=string, headers=temp_header)
                 except Exception:
                     return render(request, 'hotel/order_descrition.html', {'mainerror':'Сервис недоступен'})
                 if response.status_code != requests.codes.ok:
@@ -157,18 +189,27 @@ def show_order(request, order_id):
     return render(request, 'hotel/order_descrition.html', context)
 
 def bill_order(request):
+    if not 'username' in request.COOKIES or not 'password' in request.COOKIES or not 'access_token' in request.COOKIES or \
+        not 'refresh_token' in request.COOKIES or not 'scope' in request.COOKIES:
+        return redirect('/hotel/auth')
     if request.method == 'POST':
         form = BillForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
             orderId = data['orderId']
             cartNumber = data['cartNumber']
+            username = request.COOKIES['username']
+            scope = request.COOKIES['scope']
+            token = request.COOKIES['access_token']
             if cartNumber <= 0 or orderId <= 0:
                 return render(request, 'hotel/bill.html', {'error':'Номер бронирования и номер карты не могут быть отрицательны', 'form':form})
-            url = 'http://localhost:1212/hotel/user/1/order/' + str(orderId) + '/billing'
+            header = {'authorization': 'Bearer ' + token, 'scope': scope}
+            url = 'http://localhost:1212/hotel/user/' + username + '/order/' + str(orderId) + '/billing'
             string = '{\"cartNumber\":' + str(cartNumber) + '}'
             try:
-                response = requests.post(url, data=string, headers={'content-type': 'application/json'})
+                temp_header = {'content-type': 'application/json'}
+                temp_header.update(header)
+                response = requests.post(url, data=string, headers=temp_header)
             except Exception:
                 return render(request, 'hotel/bill.html', {'mainerror':'Сервис недоступен'})
             print("code = ", response.status_code)
@@ -186,10 +227,17 @@ def bill_order(request):
     return render(request, 'hotel/bill.html', {'form':form})
 
 def delete_order(request, order_id):
-    url = 'http://localhost:1212/hotel/user/1/order/' + order_id
+    if not 'username' in request.COOKIES or not 'password' in request.COOKIES or not 'access_token' in request.COOKIES or \
+        not 'refresh_token' in request.COOKIES or not 'scope' in request.COOKIES:
+        return redirect('/hotel/auth')
+    username = request.COOKIES['username']
+    scope = request.COOKIES['scope']
+    token = request.COOKIES['access_token']
+    url = 'http://localhost:1212/hotel/user/' + username + '/order/' + order_id
     form = OrderForm()
+    header = {'authorization': 'Bearer ' + token, 'scope': scope}
     try:
-        response = requests.delete(url)
+        response = requests.delete(url, headers=header)
     except Exception:
         context = {'form':form, 'error':'Сервис недоступен'}
         return render(request, 'hotel/order_descrition.html', context)
@@ -198,4 +246,36 @@ def delete_order(request, order_id):
         return render(request, 'hotel/order_descrition.html', context)
     return redirect('/hotel/order/')
 
-
+def auth_user(request):
+    if request.method == 'POST':
+        form = AuthForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            v_password = data['password']
+            v_username = data['username']
+            scope = base64.b64encode(b'client:ui-secret')
+            header = {"Authorization": "Basic " + scope.decode('utf-8')}
+            url = "http://localhost:8081/oauth/token?grant_type=password&redirect_uri=https://www.yandex.ru&username=" + v_username + "&password=" + v_password
+            try:
+                response = requests.post(url, headers=header)
+                print("CODE = ", response.status_code)
+            except Exception as ecx:
+                return render(request, 'hotel/auth.html', {'mainerror':'EXEPTIONСервис недоступен'})
+            print(response.status_code)
+            if response.status_code == 401:
+                return render(request, 'hotel/auth.html', {'error':'Неверное имя пользователя или пароль', 'form':form})
+            if response.status_code != 200:
+                return render(request, 'hotel/auth.html', {'error':'Ошибка авторизации', 'form':form})
+            template = loader.get_template('hotel/auth.html')
+            context = {'error':'good', 'form':form}
+            main_response = HttpResponse(template.render(context, request))
+            main_response.set_cookie('password', v_password)
+            main_response.set_cookie('username', v_username)
+            expires = datetime.datetime.strftime(datetime.datetime.utcnow() + datetime.timedelta(seconds=response.json()['expires_in']), "%a, %d-%b-%Y %H:%M:%S GMT")
+            main_response.set_cookie('access_token', response.json()['access_token'], expires=expires, max_age=response.json()['expires_in'])
+            main_response.set_cookie('refresh_token', response.json()['refresh_token'])
+            main_response.set_cookie('scope', response.json()['scope'])
+            return main_response
+    else:
+        form = AuthForm()
+    return render(request, 'hotel/auth.html', {'form':form})

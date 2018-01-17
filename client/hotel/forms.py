@@ -15,3 +15,8 @@ class OrderModifyForm(forms.Form):
 class BillForm(forms.Form):
     orderId = forms.IntegerField(initial=1)
     cartNumber = forms.IntegerField(initial=12345)
+
+
+class AuthForm(forms.Form):
+    username = forms.CharField(initial='janna')#'Input your username')
+    password = forms.CharField(initial='12345')#'Input your password')

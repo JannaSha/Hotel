@@ -12,4 +12,5 @@ urlpatterns = [
     re_path(r'^billing/$', views.bill_order, name='make_order'),
     re_path(r'^order/(\d{0,10000})$', views.show_order, name='show_order'),
     re_path(r'^order/(\d{0,10000})/delete$', views.delete_order, name='delete_order'),
+    re_path(r'^auth$', views.auth_user, name='auth'),
 ]

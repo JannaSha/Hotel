@@ -20,6 +20,10 @@ public class UsersClient {
         return restTemplate.getForEntity(serviceUrl + String.format("/passport/%d", number), User.class);
     }
 
+    public ResponseEntity<User> findByUserName(String username) {
+        return restTemplate.getForEntity(serviceUrl + String.format("/username/%s", username), User.class);
+    }
+
     public ResponseEntity<User> modifyUser(long id, User user) {
         return restTemplate.exchange(serviceUrl + String.format("/modify/%d", id), HttpMethod.PUT,
                 new HttpEntity<>(user), User.class);

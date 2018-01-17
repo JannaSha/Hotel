@@ -1,6 +1,8 @@
 package com.gateway.controllers;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gateway.models.*;
 import com.gateway.clients.*;
 import org.apache.log4j.Logger;
@@ -16,8 +18,8 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -42,6 +44,7 @@ public class Controller {
     private UsersClient usersClient = new UsersClient();
     private RoomClient roomClient = new RoomClient();
     private OrdersClient ordersClient = new OrdersClient();
+    private AuthClient authClient = new AuthClient();
 
     private static final Logger log = Logger.getLogger(Controller.class);
 
@@ -153,6 +156,7 @@ public class Controller {
         });
     }
 
+    /* Получение всех комнат в отеле */
     @RequestMapping(method = RequestMethod.GET, value = "/rooms",
             params = {"page", "size"}, produces="application/json")
     public Object getAllRooms(@RequestParam("page") Integer page, @RequestParam("size") Integer size){
@@ -176,44 +180,106 @@ public class Controller {
     }
 
     /* Получение описания заказа авторизованным пользователем */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{userId}/order/{orderId}", produces="application/json")
-    public ResponseEntity<Order> getUserOrder(@PathVariable("userId") long userId,
+    /* Права для клиента scope = ui */
+    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/order/{orderId}", produces="application/json")
+    public ResponseEntity<Order> getUserOrder(@PathVariable("username") String username,
                                               @PathVariable("orderId") long orderId,
-                                              HttpServletRequest request) {
-        System.out.println(request.getHeader("Authorization"));
-        ResponseEntity<User> responseEntityUser = handle(() -> usersClient.findOne(userId), "users");
+                                              @RequestHeader HttpHeaders header) {
+        ResponseEntity<String> authResponse = handle(() -> authClient.getCurrent(header), "auth");
+        if (authResponse.getStatusCode() == HttpStatus.UNAUTHORIZED ||
+                authResponse.getStatusCode() == HttpStatus.FORBIDDEN) {
+            log.error(String.format("GET/user/%s/orders: Token does not exist. %s",
+                    username, authResponse.getStatusCode().toString()));
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        if (authResponse.getStatusCode() != HttpStatus.OK) {
+            log.error(String.format("GET/user/%s/orders: Can not get token. %s",
+                    username, authResponse.getStatusCode().toString()));
+            return new ResponseEntity<>(authResponse.getStatusCode());
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode actualObj;
+        try {
+            actualObj = mapper.readTree(authResponse.getBody());
+        } catch (IOException ex) {
+            log.error(String.format("GET/user/%s/order/%d: Error parse json auth file. %s",
+                    username, orderId, HttpStatus.INTERNAL_SERVER_ERROR.toString()));
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        ResponseEntity<User> responseEntityUser = handle(() -> usersClient.findByUserName(username), "users");
         if (responseEntityUser.getStatusCode() == HttpStatus.NOT_FOUND) {
-            log.error(String.format("GET/user/%d/order/%d: User does not exist. %s",
-                    userId, orderId, HttpStatus.UNAUTHORIZED.toString()));
+            log.error(String.format("GET/user/%s/order/%d: User does not exist. %s",
+                    username, orderId, HttpStatus.UNAUTHORIZED.toString()));
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         else if (responseEntityUser.getStatusCode() != HttpStatus.OK) {
-            log.error(String.format("GET/user/%d/order/%d: Other error. %s",
-                    userId, orderId, responseEntityUser.getStatusCode().toString()));
+            log.error(String.format("GET/user/%s/order/%d: Other error. %s",
+                    username, orderId, responseEntityUser.getStatusCode().toString()));
             return new ResponseEntity<>(responseEntityUser.getStatusCode());
+        }
+        if (!actualObj.get("userAuthentication").get("details").get("username").toString().
+                equals("\"" + responseEntityUser.getBody().getUsername() + "\"") ||
+                header.get("scope").toString().equals("\"ui\"")) {
+            log.error(String.format("GET/user/%s/order/%d: UNAUTHORIZED error . %s",
+                    username, orderId, HttpStatus.UNAUTHORIZED.toString()));
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         ResponseEntity<Order> orderResponseEntity = handle(() -> ordersClient.findById(orderId), "orders");
         if (orderResponseEntity.getStatusCode() == HttpStatus.OK) {
-            log.error(String.format("GET/user/%d/order/%d: Get order's description successfully. %s",
-                    userId, orderId, orderResponseEntity.getStatusCode().toString()));
+            log.error(String.format("GET/user/%s/order/%d: Get order's description successfully. %s",
+                    username, orderId, orderResponseEntity.getStatusCode().toString()));
         }
         return orderResponseEntity;
     }
 
     /* Получение всех заказов авторизованного пользователя */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{userId}/orders", produces="application/json")
-    public ResponseEntity<List<OrderGetter>> getAllUserOrders(@PathVariable("userId") long userId) {
-        ResponseEntity<User> responseEntityUser = handle(() -> usersClient.findOne(userId), "users");
+    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/orders", produces="application/json")
+    public ResponseEntity<List<OrderGetter>> getAllUserOrders(@PathVariable("username") String username,
+                                                              @RequestHeader HttpHeaders header) {
+
+        ResponseEntity<String> authResponse = handle(() -> authClient.getCurrent(header), "auth");
+        if (authResponse.getStatusCode() == HttpStatus.UNAUTHORIZED ||
+                authResponse.getStatusCode() == HttpStatus.FORBIDDEN) {
+            log.error(String.format("GET/user/%s/orders: Token does not exist. %s",
+                    username, authResponse.getStatusCode().toString()));
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        if (authResponse.getStatusCode() != HttpStatus.OK) {
+            log.error(String.format("GET/user/%s/orders: Can not get token. %s",
+                    username, authResponse.getStatusCode().toString()));
+            return new ResponseEntity<>(authResponse.getStatusCode());
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode actualObj;
+        try {
+            actualObj = mapper.readTree(authResponse.getBody());
+        } catch (Exception ex) {
+            log.error(String.format("GET/user/%s/orders: Error parse json auth file. %s",
+                    username, HttpStatus.INTERNAL_SERVER_ERROR.toString()));
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        ResponseEntity<User> responseEntityUser = handle(() -> usersClient.findByUserName(username), "users");
         if (responseEntityUser.getStatusCode() == HttpStatus.NOT_FOUND) {
-            log.error(String.format("GET/user/%d/orders: User does not exist. %s",
-                    userId, responseEntityUser.getStatusCode().toString()));
+            log.error(String.format("GET/user/%s/orders: User does not exist. %s",
+                    username, responseEntityUser.getStatusCode().toString()));
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         else if (responseEntityUser.getStatusCode() != HttpStatus.OK) {
-            log.error(String.format("GET/user/%d/orders: Other error. %s",
-                    userId, responseEntityUser.getStatusCode().toString()));
+            log.error(String.format("GET/user/%s/orders: Other error. %s",
+                    username, responseEntityUser.getStatusCode().toString()));
             return new ResponseEntity<>(responseEntityUser.getStatusCode());
         }
+        if (!actualObj.get("userAuthentication").get("details").get("username").toString().
+                equals("\"" + responseEntityUser.getBody().getUsername() + "\"") ||
+                header.get("scope").toString().equals("ui")) {
+            log.error(String.format("GET/user/%s/orders: UNAUTHORIZED error . %s",
+                    username, HttpStatus.UNAUTHORIZED.toString()));
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        long userId = responseEntityUser.getBody().getId();
         ResponseEntity<Order[]> ordersResponseEntity =
                 handle(() -> ordersClient.findByUserId(userId), "orders");
         if (ordersResponseEntity.getStatusCode() == HttpStatus.NOT_FOUND) {
@@ -266,23 +332,52 @@ public class Controller {
 
 
     /* Создание заказа для авторизованного пользователя */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{userId}/order",
+    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/order",
             consumes = "application/json", produces="application/json")
-    public ResponseEntity<Order> createOrder(@PathVariable("userId") long userId,
-                                             @RequestBody @Valid OrderCreator orderCreator) {
-        System.out.println("Im here");
-        ResponseEntity<User> responseUser = handle(() -> usersClient.findOne(userId), "users");
+    public ResponseEntity<Order> createOrder(@PathVariable("username") String username,
+                                             @RequestBody @Valid OrderCreator orderCreator,
+                                             @RequestHeader HttpHeaders header) {
+
+        ResponseEntity<String> authResponse = handle(() -> authClient.getCurrent(header), "auth");
+        if (authResponse.getStatusCode() == HttpStatus.UNAUTHORIZED ||
+                authResponse.getStatusCode() == HttpStatus.FORBIDDEN) {
+            log.error(String.format("GET/user/%s/orders: Token does not exist. %s",
+                    username, authResponse.getStatusCode().toString()));
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        if (authResponse.getStatusCode() != HttpStatus.OK) {
+            log.error(String.format("GET/user/%s/orders: Can not get token. %s",
+                    username, authResponse.getStatusCode().toString()));
+            return new ResponseEntity<>(authResponse.getStatusCode());
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode actualObj;
+        try {
+            actualObj = mapper.readTree(authResponse.getBody());
+        } catch (IOException ex) {
+            log.error(String.format("GET/user/%s/order: Error parse json auth file. %s",
+                    username, HttpStatus.INTERNAL_SERVER_ERROR.toString()));
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        ResponseEntity<User> responseUser = handle(() -> usersClient.findByUserName(username), "users");
         if (responseUser.getStatusCode() == HttpStatus.NOT_FOUND) {
-            log.error(String.format("POST/user/%d/order: User does not exist. %s",
-                    userId, HttpStatus.UNAUTHORIZED.toString()));
+            log.error(String.format("POST/user/%s/order: User does not exist. %s",
+                    username, HttpStatus.UNAUTHORIZED.toString()));
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         if (responseUser.getStatusCode() != HttpStatus.OK) {
-            log.error(String.format("POST/user/%d/order: Other error (user service). %s",
-                    userId, responseUser.getStatusCode().toString()));
+            log.error(String.format("POST/user/%s/order: Other error (user service). %s",
+                    username, responseUser.getStatusCode().toString()));
             return new ResponseEntity<>(responseUser.getStatusCode());
         }
-
+        if (!actualObj.get("userAuthentication").get("details").get("username").toString().
+                equals("\"" + responseUser.getBody().getUsername() + "\"") ||
+                header.get("scope").toString().equals("\"ui\"")) {
+            log.error(String.format("GET/user/%s/order: UNAUTHORIZED error . %s",
+                    username, HttpStatus.UNAUTHORIZED.toString()));
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        long userId = responseUser.getBody().getId();
         ResponseEntity<RoomType> roomTypeResponse =
                 handle(() -> roomsTypeClient.findByIdRoomType(orderCreator.getRoomTypeId()), "rooms");
         if (roomTypeResponse.getStatusCode() == HttpStatus.NOT_FOUND) {
@@ -356,22 +451,51 @@ public class Controller {
     }
 
     /* Оплата существующего заказа авторизованным пользователем */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{userId}/order/{orderId}/billing",
+    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/order/{orderId}/billing",
             consumes = "application/json", produces="application/json")
-    public ResponseEntity<Order> billOrder(@PathVariable("userId") long userId, @PathVariable("orderId") long orderId,
-                                           @RequestBody @Valid BillMaker bill)
+    public ResponseEntity<Order> billOrder(@PathVariable("username") String username, @PathVariable("orderId") long orderId,
+                                           @RequestBody @Valid BillMaker bill, @RequestHeader HttpHeaders header)
     {
-        ResponseEntity<User> responseEntityUser = handle(() -> usersClient.findOne(userId), "users");
+        ResponseEntity<String> authResponse = handle(() -> authClient.getCurrent(header), "auth");
+        if (authResponse.getStatusCode() == HttpStatus.UNAUTHORIZED ||
+                authResponse.getStatusCode() == HttpStatus.FORBIDDEN) {
+            log.error(String.format("GET/user/%s/orders: Token does not exist. %s",
+                    username, authResponse.getStatusCode().toString()));
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        if (authResponse.getStatusCode() != HttpStatus.OK) {
+            log.error(String.format("GET/user/%s/orders: Can not get token. %s",
+                    username, authResponse.getStatusCode().toString()));
+            return new ResponseEntity<>(authResponse.getStatusCode());
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode actualObj;
+        try {
+            actualObj = mapper.readTree(authResponse.getBody());
+        } catch (IOException ex) {
+            log.error(String.format("GET/user/%s/order/%d: Error parse json auth file. %s",
+                    username, orderId, HttpStatus.INTERNAL_SERVER_ERROR.toString()));
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        ResponseEntity<User> responseEntityUser = handle(() -> usersClient.findByUserName(username), "users");
         if (responseEntityUser.getStatusCode() == HttpStatus.NOT_FOUND) {
-            log.error(String.format("POST/user/%d/order/%d/billing: User are't found. %s",
-                    userId, orderId, responseEntityUser.getStatusCode().toString()));
+            log.error(String.format("POST/user/%s/order/%d/billing: User are't found. %s",
+                    username, orderId, responseEntityUser.getStatusCode().toString()));
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         else if (responseEntityUser.getStatusCode() != HttpStatus.OK) {
-            log.error(String.format("POST/user/%d/order/%d/billing: Other error (user service). %s",
-                    userId, orderId, responseEntityUser.getStatusCode().toString()));
+            log.error(String.format("POST/user/%s/order/%d/billing: Other error (user service). %s",
+                    username, orderId, responseEntityUser.getStatusCode().toString()));
             return new ResponseEntity<>(responseEntityUser.getStatusCode());
         }
+        if (!actualObj.get("userAuthentication").get("details").get("username").toString().
+                equals("\"" + responseEntityUser.getBody().getUsername() + "\"") ||
+                header.get("scope").toString().equals("\"ui\"")) {
+            log.error(String.format("GET/user/%s/order/%d/billing: UNAUTHORIZED error . %s",
+                    username, orderId, HttpStatus.UNAUTHORIZED.toString()));
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        long userId = responseEntityUser.getBody().getId();
         ResponseEntity<Order> orderResponseEntity = handle(() -> ordersClient.findById(orderId), "orders");
         if (orderResponseEntity.getStatusCode() == HttpStatus.NOT_FOUND) {
             log.error(String.format("POST/user/%d/order/%d/billing: Order are't found. %s",
@@ -419,29 +543,58 @@ public class Controller {
     }
 
     /* Изменение сущесвующего заказа авторизованным пользователем */
-    @RequestMapping(method = RequestMethod.PUT, value = "/user/{userId}/order/{orderId}",
+    @RequestMapping(method = RequestMethod.PUT, value = "/user/{username}/order/{orderId}",
             produces="application/json", consumes = "application/json")
-    public ResponseEntity<Order> modifyUserOrder(@PathVariable("userId") long userId,
+    public ResponseEntity<Order> modifyUserOrder(@PathVariable("username") String username,
                                                  @PathVariable("orderId") long orderId,
-                                                 @RequestBody @Valid OrderModify newOrder) {
+                                                 @RequestBody @Valid OrderModify newOrder,
+                                                 @RequestHeader HttpHeaders header) {
+        ResponseEntity<String> authResponse = handle(() -> authClient.getCurrent(header), "auth");
+        if (authResponse.getStatusCode() == HttpStatus.UNAUTHORIZED ||
+                authResponse.getStatusCode() == HttpStatus.FORBIDDEN) {
+            log.error(String.format("GET/user/%s/orders: Token does not exist. %s",
+                    username, authResponse.getStatusCode().toString()));
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        if (authResponse.getStatusCode() != HttpStatus.OK) {
+            log.error(String.format("GET/user/%s/orders: Can not get token. %s",
+                    username, authResponse.getStatusCode().toString()));
+            return new ResponseEntity<>(authResponse.getStatusCode());
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode actualObj;
+        try {
+            actualObj = mapper.readTree(authResponse.getBody());
+        } catch (IOException ex) {
+            log.error(String.format("GET/user/%s/order/%d: Error parse json auth file. %s",
+                    username, orderId, HttpStatus.INTERNAL_SERVER_ERROR.toString()));
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         boolean is_changed = false;
-        ResponseEntity<User> responseEntityUser = handle(() -> usersClient.findOne(userId), "users");
+        ResponseEntity<User> responseEntityUser = handle(() -> usersClient.findByUserName(username), "users");
         if (responseEntityUser.getStatusCode() == HttpStatus.NOT_FOUND) {
-            log.error(String.format("PUT/user/%d/order/%d: User is't found. %s",
-                    userId, orderId, responseEntityUser.getStatusCode().toString()));
+            log.error(String.format("PUT/user/%s/order/%d: User is't found. %s",
+                    username, orderId, responseEntityUser.getStatusCode().toString()));
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         else if (responseEntityUser.getStatusCode() != HttpStatus.OK) {
-            log.error(String.format("PUT/user/%d/order/%d: Error modify order (user service). %s",
-                    userId, orderId, responseEntityUser.getStatusCode().toString()));
+            log.error(String.format("PUT/user/%s/order/%d: Error modify order (user service). %s",
+                    username, orderId, responseEntityUser.getStatusCode().toString()));
             return new ResponseEntity<>(responseEntityUser.getStatusCode());
         }
-
+        if (!actualObj.get("userAuthentication").get("details").get("username").toString().
+                equals("\"" + responseEntityUser.getBody().getUsername() + "\"") ||
+                header.get("scope").toString().equals("\"ui\"")) {
+            log.error(String.format("GET/user/%s/order/%d: UNAUTHORIZED error . %s",
+                    username, orderId, HttpStatus.UNAUTHORIZED.toString()));
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        long userId = responseEntityUser.getBody().getId();
         ResponseEntity<Order> orderResponseEntity = handle(() -> ordersClient.findById(orderId),"orders");
         if (orderResponseEntity.getStatusCode() == HttpStatus.SERVICE_UNAVAILABLE){
             Boolean result = taskQueue.offer(new TaskRecord(
                     String.format("/user/%d/order/%d", userId, orderId),
-                    () -> modifyUserOrder(userId, orderId, newOrder), "message"));
+                    () -> modifyUserOrder(username, orderId, newOrder, header), "message"));
             if (!result) {
                 log.info("[updatePost($postId)] => couldn't schedule task because queue is full");
                 return null;
@@ -490,7 +643,7 @@ public class Controller {
              if (orderResponseEntity.getStatusCode() == HttpStatus.SERVICE_UNAVAILABLE){
                 Boolean result = taskQueue.offer(new TaskRecord(
                         String.format("/user/%d/order/%d", userId, orderId),
-                        () -> modifyUserOrder(userId, orderId, newOrder), "message"));
+                        () -> modifyUserOrder(username, orderId, newOrder, header), "message"));
                  if (!result) {
                      log.info("[updatePost($postId)] => couldn't schedule task because queue is full");
                      return null;
@@ -582,20 +735,52 @@ public class Controller {
     }
 
     /* Удаление заказа авторизованным пользователем */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{userId}/order/{orderId}")
-    public ResponseEntity<Order> deleteOrder(@PathVariable("userId") long userId,
-                                             @PathVariable("orderId") long orderId) {
-        ResponseEntity<User> responseEntityUser = handle(() -> usersClient.findOne(userId), "users");
+    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/order/{orderId}")
+    public ResponseEntity<Order> deleteOrder(@PathVariable("username") String username,
+                                             @PathVariable("orderId") long orderId,
+                                             @RequestHeader HttpHeaders header) {
+
+        ResponseEntity<String> authResponse = handle(() -> authClient.getCurrent(header), "auth");
+        if (authResponse.getStatusCode() == HttpStatus.UNAUTHORIZED ||
+                authResponse.getStatusCode() == HttpStatus.FORBIDDEN) {
+            log.error(String.format("GET/user/%s/orders: Token does not exist. %s",
+                    username, authResponse.getStatusCode().toString()));
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        if (authResponse.getStatusCode() != HttpStatus.OK) {
+            log.error(String.format("GET/user/%s/orders: Can not get token. %s",
+                    username, authResponse.getStatusCode().toString()));
+            return new ResponseEntity<>(authResponse.getStatusCode());
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode actualObj;
+        try {
+            actualObj = mapper.readTree(authResponse.getBody());
+        } catch (IOException ex) {
+            log.error(String.format("GET/user/%s/order/%d: Error parse json auth file. %s",
+                    username, orderId, HttpStatus.INTERNAL_SERVER_ERROR.toString()));
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        ResponseEntity<User> responseEntityUser = handle(() -> usersClient.findByUserName(username), "users");
         if (responseEntityUser.getStatusCode() == HttpStatus.NOT_FOUND) {
-            log.error(String.format("DELETE/user/%d/order/%d: User is't found. %s",
-                    userId, orderId, HttpStatus.UNAUTHORIZED.toString()));
+            log.error(String.format("DELETE/user/%s/order/%d: User is't found. %s",
+                    username, orderId, HttpStatus.UNAUTHORIZED.toString()));
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         else if (responseEntityUser.getStatusCode() != HttpStatus.OK) {
-            log.error(String.format("DELETE/user/%d/order/%d: Other error (user service). %s",
-                    userId, orderId, responseEntityUser.getStatusCode().toString()));
+            log.error(String.format("DELETE/user/%s/order/%d: Other error (user service). %s",
+                    username, orderId, responseEntityUser.getStatusCode().toString()));
             return new ResponseEntity<>(responseEntityUser.getStatusCode());
         }
+        if (!actualObj.get("userAuthentication").get("details").get("username").toString().
+                equals("\"" + responseEntityUser.getBody().getUsername() + "\"") ||
+                header.get("scope").toString().equals("\"ui\"")) {
+            log.error(String.format("GET/user/%s/order/%d: UNAUTHORIZED error . %s",
+                    username, orderId, HttpStatus.UNAUTHORIZED.toString()));
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        long userId = responseEntityUser.getBody().getId();
         ResponseEntity<Order> orderResponseEntity = handle(() -> ordersClient.findById(orderId), "orders");
         if (orderResponseEntity.getStatusCode() != HttpStatus.OK) {
             log.error(String.format("DELETE/user/%d/order/%d: Order is't found. %s",

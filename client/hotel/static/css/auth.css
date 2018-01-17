@@ -1,23 +1,36 @@
-.error-message {
+
+.description {
+  /*display: inlin-block;*/
+  /*position: relative;*/
   font-family: 'Open Sans', sans-serif;
-  color: red;
-  padding: 1%;
+  padding-left: 3%;
+  /*font-size: 20px;*/
+}
+
+.delete-order {
+  padding-left: 10%;
 }
 
 .good-message {
   font-family: 'Open Sans', sans-serif;
   color: green;
-  padding: 1%;
+  padding: 2%;
+  font-size: 15px;
+}
+.error-message, .no-modify{
+  font-family: 'Open Sans', sans-serif;
+  color: red;
+  padding: 2%;
+  font-size: 15px;
 }
 
-
-.bill-form {
+.modify-form {
   font-family: 'Open Sans', sans-serif;
   padding-left: 3%;
   padding-top: 3%;
 }
 
-.bill-form {
+.modify-form {
   font-family: 'Ubuntu', sans-serif;
 }
 

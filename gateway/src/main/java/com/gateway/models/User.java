@@ -32,9 +32,6 @@ public class User implements Serializable{
     @Column(name = "username")
     private String username;
 
-    @NotNull
-    @Column(name = "password")
-    private String password;
 
     public long getId() {
         return id;
@@ -68,24 +65,35 @@ public class User implements Serializable{
         this.ordersAmount = ordersAmount;
     }
 
+    public void setPassportNumber(long passportNumber) {
+        this.passportNumber = passportNumber;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     public User() {};
 
-    public User(long passportNumber, String firstName, String lastName, Integer ordersAmount) {
+    public User(long passportNumber, String firstName, String lastName, Integer ordersAmount, String username) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.passportNumber = passportNumber;
         this.ordersAmount = ordersAmount;
+        this.username = username;
     }
 
-    public User(long id, long passportNumber, String firstName, String lastName, Integer ordersAmount,
-                String password, String username) {
+    public User(long id, long passportNumber, String firstName,
+                String lastName, Integer ordersAmount, String username) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.passportNumber = passportNumber;
         this.ordersAmount = ordersAmount;
-        this.password = password;
         this.username = username;
     }
 
@@ -95,12 +103,14 @@ public class User implements Serializable{
         this.lastName = obj.getLastName();
         this.passportNumber = obj.getPassportNumber();
         this.ordersAmount = obj.getOrdersAmount();
+        this.username = obj.getUsername();
     }
 
 
     @Override
     public String toString() {
-        return String.format("User: id = %d First name = %s, last name =  %s, passport = %d, ordersAmount = %d",
-                this.id, this.firstName, this.lastName, this.passportNumber, this.ordersAmount);
+        return String.format("User: id = %d First name = %s, last name =  %s, " +
+                        "passport = %d, ordersAmount = %d, username = %s",
+                this.id, this.firstName, this.lastName, this.passportNumber, this.ordersAmount, this.username);
     }
 }
