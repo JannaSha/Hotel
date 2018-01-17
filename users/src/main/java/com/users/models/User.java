@@ -32,6 +32,11 @@ public class User implements Serializable {
     @NotNull
     @Column(name = "orders_amount")
     private Integer ordersAmount;
+    @NotNull
+    @Length(max = 256)
+    @Column(name = "username")
+    private String username;
+
 
     public long getId() {
         return id;
@@ -47,6 +52,10 @@ public class User implements Serializable {
 
     public long getPassportNumber() {
         return passportNumber;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public String getFirstName() {
@@ -73,21 +82,27 @@ public class User implements Serializable {
         this.passportNumber = passportNumber;
     }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public User() {};
 
-    public User(long passportNumber, String firstName, String lastName, Integer ordersAmount) {
+    public User(long passportNumber, String firstName, String lastName, Integer ordersAmount, String username) {
        this.firstName = firstName;
        this.lastName = lastName;
        this.passportNumber = passportNumber;
        this.ordersAmount = ordersAmount;
+       this.username = username;
     }
 
-    public User(long id, long passportNumber, String firstName, String lastName, Integer ordersAmount) {
+    public User(long id, long passportNumber, String firstName, String lastName, Integer ordersAmount, String username) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.passportNumber = passportNumber;
         this.ordersAmount = ordersAmount;
+        this.username = username;
     }
 
     public User(User obj){
@@ -96,6 +111,7 @@ public class User implements Serializable {
         this.lastName = obj.getLastName();
         this.passportNumber = obj.getPassportNumber();
         this.ordersAmount = obj.getOrdersAmount();
+        this.username = obj.getUsername();
     }
 
 

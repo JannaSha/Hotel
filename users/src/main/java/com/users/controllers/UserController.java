@@ -134,6 +134,26 @@ public class UserController {
         return response;
     }
 
+    @RequestMapping(method =  RequestMethod.GET, value = "/username/{username}")
+    public ResponseEntity<User> findOne(@PathVariable("username") String username) {
+        ResponseEntity<User> response;
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json;charset=UTF-8");
+
+        User user = repository.findByUsername(username);
+        if (user != null) {
+            response = new ResponseEntity<>(user, headers, HttpStatus.OK);
+            log.info("Get user successfully id = " + username);
+        }
+        else {
+//            response = new ResponseEntity<>(getJSONObject("Error: user is not found id = " + id),
+//                    headers, HttpStatus.NOT_FOUND);
+            response = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            log.error("Error: user is not found id = " + username);
+        }
+        return response;
+    }
+
     @RequestMapping(method =  RequestMethod.GET, value = "/passport/{number}")
     public ResponseEntity<User> findByPassportNumber(@PathVariable("number") long number) {
         ResponseEntity<User> response;

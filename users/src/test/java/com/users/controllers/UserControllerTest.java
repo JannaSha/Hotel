@@ -55,7 +55,7 @@ public class UserControllerTest {
 
     @Test
     public void shouldFindUserById() {
-        User user = new User(1L,12345678L, "Janna", "Shapoval", 0);
+        User user = new User(1L,12345678L, "Janna", "Shapoval", 0, "username");
         Mockito.when(userRepository.exists(1L)).thenReturn(true);
         Mockito.when(userRepository.findOne(1L)).thenReturn(user);
         try {
@@ -86,8 +86,8 @@ public class UserControllerTest {
     @Test
     public void shouldFindAllUsers() {
         List<User> users = new LinkedList<>();
-        users.add(new User(1L,12345678L, "Janna", "Shapoval", 0));
-        users.add(new User(2L,11111111L, "Masha", "Kasha", 3));
+        users.add(new User(1L,12345678L, "Janna", "Shapoval", 0, "username"));
+        users.add(new User(2L,11111111L, "Masha", "Kasha", 3, "username"));
         Integer page = 0;
         Integer size = 2;
         Mockito.when(userRepository.findAll(new PageRequest(page, size))).thenReturn(users);
@@ -129,7 +129,7 @@ public class UserControllerTest {
 
     @Test
     public void shouldFindUserByPassport() {
-        User user = new User(1L,12345678L, "Janna", "Shapoval", 0);
+        User user = new User(1L,12345678L, "Janna", "Shapoval", 0, "username");
         Mockito.when(userRepository.findByPassportNumber(user.getPassportNumber())).thenReturn(user);
         try {
             mockMvc.perform(get(String.format("/user/passport/%d", user.getPassportNumber())))
@@ -146,7 +146,7 @@ public class UserControllerTest {
 
     @Test
     public void shouldNotFindUserByPassport() {
-        User user = new User(1L,12345678L, "Janna", "Shapoval", 0);
+        User user = new User(1L,12345678L, "Janna", "Shapoval", 0, "username");
         Mockito.when(userRepository.findByPassportNumber(user.getPassportNumber())).thenReturn(null);
         try {
             mockMvc.perform(get(String.format("/user/passport/%d", user.getPassportNumber())))
@@ -159,7 +159,7 @@ public class UserControllerTest {
 
     @Test
     public void shouldDeleteUserById() {
-        User user = new User(1L,12345678L, "Janna", "Shapoval", 0);
+        User user = new User(1L,12345678L, "Janna", "Shapoval", 0, "username");
         Mockito.when(userRepository.exists(1L)).thenReturn(true);
         Mockito.doNothing().when(userRepository).delete(1L);
         try {
@@ -184,7 +184,7 @@ public class UserControllerTest {
 
     @Test
     public void shouldCreateRoom() {
-        User user = new User(1L,12345678L, "Janna", "Shapoval", 0);
+        User user = new User(1L,12345678L, "Janna", "Shapoval", 0, "username");
         String json = "";
         try {
             json = mapper.writeValueAsString(user);
@@ -211,7 +211,7 @@ public class UserControllerTest {
 
     @Test
     public void shouldNotCreateRoomConflict() {
-        User user = new User(1L,12345678L, "Janna", "Shapoval", 0);
+        User user = new User(1L,12345678L, "Janna", "Shapoval", 0, "username");
         String json = "";
         try {
             json = mapper.writeValueAsString(user);
@@ -232,7 +232,7 @@ public class UserControllerTest {
 
     @Test
     public void shouldNotCreateRoomServerError() {
-        User user = new User(1L,12345678L, "Janna", "Shapoval", 0);
+        User user = new User(1L,12345678L, "Janna", "Shapoval", 0, "username");
         String json = "";
         try {
             json = mapper.writeValueAsString(user);
