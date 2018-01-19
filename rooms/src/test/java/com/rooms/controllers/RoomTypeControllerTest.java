@@ -107,7 +107,7 @@ public class RoomTypeControllerTest {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        assertEquals("bad", roomTypes, roomTypeController.findAllRoomsType(page, size).getBody());
+        assertEquals("bad", roomTypes, roomTypeController.findAllRoomsType(page, size, null).getBody());
     }
 
     @Test

@@ -110,7 +110,7 @@ public class OrdersControllerTest {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        assertEquals("bad", orders, orderController.findAllOrders(page, size).getBody());
+        assertEquals("bad", orders, orderController.findAllOrders(page, size, null).getBody());
     }
 
     @Test
@@ -152,7 +152,7 @@ public class OrdersControllerTest {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        assertEquals("bad", orders, orderController.findByUserId(1).getBody());
+        assertEquals("bad", orders, orderController.findByUserId(1, null).getBody());
 
     }
 

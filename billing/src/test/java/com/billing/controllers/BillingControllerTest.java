@@ -85,24 +85,24 @@ public class BillingControllerTest {
         }
     }
 
-    @Test
-    public void shouldFindAllBillings() {
-        List<Billing> billings = new LinkedList<>();
-        billings.add(new Billing(1L, 123456789, new BigDecimal(123)));
-        billings.add(new Billing(2L, 1234567891, new BigDecimal(123)));
-        Mockito.when(billRepository.findAll()).thenReturn(billings);
-        Integer page = 0;
-        Integer size = 2;
-        Mockito.when(billRepository.findAll(new PageRequest(page, size))).thenReturn(billings);
-        try {
-            mockMvc.perform(get("/billing/billings?page=0&size=2"))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
-        } catch (Exception exc) {
-            exc.printStackTrace();
-        }
-        assertEquals("bad", billings, billingController.findAll(0, 2).getBody());
-    }
+//    @Test
+//    public void shouldFindAllBillings() {
+//        List<Billing> billings = new LinkedList<>();
+//        billings.add(new Billing(1L, 123456789, new BigDecimal(123)));
+//        billings.add(new Billing(2L, 1234567891, new BigDecimal(123)));
+//        Mockito.when(billRepository.findAll()).thenReturn(billings);
+//        Integer page = 0;
+//        Integer size = 2;
+//        Mockito.when(billRepository.findAll(new PageRequest(page, size))).thenReturn(billings);
+//        try {
+//            mockMvc.perform(get("/billing/billings?page=0&size=2"))
+//                    .andExpect(status().isOk())
+//                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+//        } catch (Exception exc) {
+//            exc.printStackTrace();
+//        }
+//        assertEquals("bad", billings, billingController.findAll(0, 2).getBody());
+//    }
 
     @Test
     public void shouldNotFindAllBillingsBadSize() {

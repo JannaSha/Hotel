@@ -2,8 +2,11 @@ package com.rooms.controllers;
 
 
 import com.fasterxml.jackson.databind.util.JSONPObject;
+import com.rooms.TokenManager;
 import com.rooms.models.RoomType;
+import com.rooms.models.Token;
 import com.rooms.repo.RoomsTypesRepository;
+import com.rooms.repo.TokenRepository;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +28,10 @@ public class RoomTypeController {
 
     @Autowired
     RoomsTypesRepository repository;
+    @Autowired
+    private TokenRepository tokenRepository;
+
+    private RoomController roomController = new RoomController();
 
     private static final Logger log = Logger.getLogger(RoomTypeController.class);
 
@@ -32,8 +39,39 @@ public class RoomTypeController {
         return new JSONPObject("message", message);
     }
 
+    @RequestMapping(method = RequestMethod.GET, value = "/token")
+    public ResponseEntity<String> getToken(@RequestHeader HttpHeaders header) {
+        ResponseEntity<String> response;
+        HttpHeaders headers = new HttpHeaders();
+
+        if (TokenManager.getAppKey() != null && TokenManager.getAppKey().equals(header.get("Authorization").get(0))) {
+            tokenRepository.deleteAll();
+            Token temp = TokenManager.generateToken();
+            tokenRepository.save(temp);
+            headers.add("token", temp.getValue());
+            response = new ResponseEntity<>(headers, HttpStatus.OK);
+        } else {
+            response = new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        return response;
+    }
+
+
+    ResponseEntity<String> checkToken(HttpHeaders headers) {
+        List<Token> tokens = tokenRepository.findAll();
+        if (tokens != null && tokens.size() == 1 && headers.containsKey("token") &&
+                headers.get("token").get(0).equals(tokens.get(0).getValue())) {
+            return null;
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
     @RequestMapping(method = RequestMethod.POST, value = "/create")
-    public ResponseEntity<RoomType> createRoomType(@RequestBody @Valid RoomType roomType) {
+    public ResponseEntity<RoomType> createRoomType(@RequestBody @Valid RoomType roomType,
+                                                   @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         ResponseEntity<RoomType> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
@@ -56,7 +94,11 @@ public class RoomTypeController {
 
     @RequestMapping(method = RequestMethod.PUT, value = "/modify/{id}",
             consumes = "application/json", produces="application/json")
-    public ResponseEntity<RoomType> modifyRoomType(@PathVariable("id") long id, @RequestBody @Valid RoomType room) {
+    public ResponseEntity<RoomType> modifyRoomType(@PathVariable("id") long id,
+                                                   @RequestBody @Valid RoomType room,
+                                                   @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         ResponseEntity<RoomType> response;
         HttpHeaders headers = new HttpHeaders();
 
@@ -81,7 +123,10 @@ public class RoomTypeController {
 
     @RequestMapping(method =  RequestMethod.GET, value = "/roomtypes", params = {"page", "size"})
     public ResponseEntity<List<RoomType>> findAllRoomsType(@RequestParam("page") Integer page,
-                                                           @RequestParam("size") Integer size) {
+                                                           @RequestParam("size") Integer size,
+                                                           @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         ResponseEntity<List<RoomType>> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
@@ -102,7 +147,11 @@ public class RoomTypeController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/{id}")
-    public ResponseEntity<RoomType> findByIdRoomType(@PathVariable("id") long id) {
+    public ResponseEntity<RoomType> findByIdRoomType(@PathVariable("id") long id,
+                                                     @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         ResponseEntity<RoomType> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
@@ -122,9 +171,12 @@ public class RoomTypeController {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/delete/{id}")
-    public ResponseEntity<RoomType> deleteRoomType(@PathVariable("id") long id) {
-        ResponseEntity<RoomType> response;
+    public ResponseEntity<RoomType> deleteRoomType(@PathVariable("id") long id,
+                                                   @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
+        ResponseEntity<RoomType> response;
         if (!repository.exists(id)) {
 //            response = new ResponseEntity<>(getJSONObject("Error trying deleting room type id = " + id),
 //                    new HttpHeaders(), HttpStatus.NOT_FOUND);

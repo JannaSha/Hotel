@@ -40,7 +40,7 @@ import java.util.function.Supplier;
 public class Controller {
 
     private BillClient billClient = new BillClient();
-    private RoomsTypeClient roomsTypeClient = new RoomsTypeClient();
+//    private RoomsTypeClient roomsTypeClient = new RoomsTypeClient();
     private UsersClient usersClient = new UsersClient();
     private RoomClient roomClient = new RoomClient();
     private OrdersClient ordersClient = new OrdersClient();
@@ -62,7 +62,7 @@ public class Controller {
     private ResponseEntity<Object> saveAll(Room room, Room oldRoom, RoomType oldRoomType,
                           RoomType roomType, User user) {
         ResponseEntity<RoomType> roomTypeResponseEntity =
-                handle(() -> roomsTypeClient.modifyRoomType(roomType.getId(), roomType), "rooms");
+                handle(() -> roomClient.modifyRoomType(roomType.getId(), roomType), "rooms");
         if (roomTypeResponseEntity.getStatusCode() == HttpStatus.NOT_FOUND) {
             log.error(String.format("POST/user/%d/order: No room type = %d. %s",
                     user.getId(), roomType.getId(), roomTypeResponseEntity.getStatusCode().toString()));
@@ -90,13 +90,13 @@ public class Controller {
         if (roomResponseEntity.getStatusCode() == HttpStatus.NOT_FOUND) {
             log.error(String.format("POST/user/%d/order: No room  = %d. %s",
                     user.getId(), room.getId(), roomTypeResponseEntity.getStatusCode().toString()));
-            handle(() -> roomsTypeClient.modifyRoomType(oldRoomType.getId(), oldRoomType), "room types");
+            handle(() -> roomClient.modifyRoomType(oldRoomType.getId(), oldRoomType), "room types");
             return new ResponseEntity<>(new ErrorEntity(HttpStatus.NOT_FOUND.value(),
                     "No room  = " + room.getId()), HttpStatus.NOT_FOUND);
         } else if (roomResponseEntity.getStatusCode() == HttpStatus.CONFLICT) {
             log.error(String.format("POST/user/%d/order: Error modify room = %d. %s",
                     user.getId(), room.getId(), roomTypeResponseEntity.getStatusCode().toString()));
-            handle(() -> roomsTypeClient.modifyRoomType(oldRoomType.getId(), oldRoomType), "room types");
+            handle(() -> roomClient.modifyRoomType(oldRoomType.getId(), oldRoomType), "room types");
             return new ResponseEntity<>(new ErrorEntity(HttpStatus.CONFLICT.value(),
                     "Error modify room = " + room.getId()), HttpStatus.CONFLICT);
         } else if (roomTypeResponseEntity.getStatusCode() == HttpStatus.SERVICE_UNAVAILABLE) {
@@ -107,7 +107,7 @@ public class Controller {
         } else if (roomResponseEntity.getStatusCode() != HttpStatus.OK) {
             log.error(String.format("POST/user/%d/order: Other error (room service). %s",
                     user.getId(), roomTypeResponseEntity.getStatusCode().toString()));
-            handle(() -> roomsTypeClient.modifyRoomType(oldRoomType.getId(), oldRoomType), "room types");
+            handle(() -> roomClient.modifyRoomType(oldRoomType.getId(), oldRoomType), "room types");
             return new ResponseEntity<>(new ErrorEntity(roomTypeResponseEntity.getStatusCode().value(),
                     "Other error in room service"), roomTypeResponseEntity.getStatusCode());
         }
@@ -118,7 +118,7 @@ public class Controller {
                     responseEntityUser.getStatusCode() != HttpStatus.CREATED) {
             log.error(String.format("POST/user/%d/order: Error modify user. %s",
                     user.getId(), responseEntityUser.getStatusCode().toString()));
-            handle(() -> roomsTypeClient.modifyRoomType(oldRoomType.getId(), oldRoomType), "room types");
+            handle(() -> roomClient.modifyRoomType(oldRoomType.getId(), oldRoomType), "room types");
             handle(() -> roomClient.modifyRoom(oldRoom.getId(), oldRoom), "rooms");
             return new ResponseEntity<>(new ErrorEntity(responseEntityUser.getStatusCode().value(),
                     responseEntityUser.getStatusCode().toString()), responseEntityUser.getStatusCode());
@@ -171,7 +171,7 @@ public class Controller {
     @RequestMapping(method = RequestMethod.GET, value = "/roomtypes",
             params = {"page", "size"}, produces="application/json")
     public Object getAllRoomTypes(@RequestParam("page") Integer page, @RequestParam("size") Integer size){
-        ResponseEntity<Object> responseEntity = handle(() -> roomsTypeClient.findAllRoomsType(page, size),
+        ResponseEntity<Object> responseEntity = handle(() -> roomClient.findAllRoomsType(page, size),
                 "room types");
         if (responseEntity.getStatusCode() == HttpStatus.OK) {
             log.info("GET/roomtypes: Get room types types successfully. " + responseEntity.getStatusCode().toString());
@@ -308,7 +308,7 @@ public class Controller {
             ResponseEntity<Room> tempRoom = handle( () -> roomClient.findById(item.getRoomId()), "rooms");
             if ( tempRoom.getStatusCode() == HttpStatus.OK) {
                 ResponseEntity<RoomType> tempRoomType =
-                        handle(() -> roomsTypeClient.findByIdRoomType(tempRoom.getBody().getRoomType()),
+                        handle(() -> roomClient.findByIdRoomType(tempRoom.getBody().getRoomType()),
                                 "room types");
                 if (tempRoomType.getStatusCode() == HttpStatus.OK) {
                     orderGetterTemp.setRoomType(tempRoomType.getBody());
@@ -379,7 +379,7 @@ public class Controller {
         }
         long userId = responseUser.getBody().getId();
         ResponseEntity<RoomType> roomTypeResponse =
-                handle(() -> roomsTypeClient.findByIdRoomType(orderCreator.getRoomTypeId()), "rooms");
+                handle(() -> roomClient.findByIdRoomType(orderCreator.getRoomTypeId()), "rooms");
         if (roomTypeResponse.getStatusCode() == HttpStatus.NOT_FOUND) {
             log.error(String.format("POST/user/%d/order: Room type = %d does not exist. %s",
                     userId, orderCreator.getRoomTypeId(), responseUser.getStatusCode().toString()));
@@ -432,7 +432,7 @@ public class Controller {
         if (orderResponseEntity.getStatusCode() != HttpStatus.CREATED) {
             log.error(String.format("POST/user/%d/order: Error create order. %s",
                     userId, orderResponseEntity.getStatusCode().toString()));
-            handle(() -> roomsTypeClient.modifyRoomType(
+            handle(() -> roomClient.modifyRoomType(
                     roomTypeResponse.getBody().getId(), roomTypeResponse.getBody()), "room types");
             handle(() -> roomClient.modifyRoom(roomResponse.getBody()[0].getId(), roomResponse.getBody()[0]),
                     "rooms");
@@ -530,7 +530,7 @@ public class Controller {
         if (orderResponseEntity.getStatusCode() != HttpStatus.OK) {
             log.error(String.format("POST/user/%d/order/%d/billing: Error modify order (order service). %s",
                     userId, orderId, orderResponseEntity.getStatusCode().toString()));
-            handleDelete(() -> billClient.delete(responseEntityBilling.getBody().getId()));
+            handle(() -> billClient.delete(responseEntityBilling.getBody().getId()), "billing");
             return new ResponseEntity<>(orderResponseEntity.getStatusCode());
         }
         log.info(String.format("POST/user/%d/order/%d/billing: Order = %d has paid successfully. %s",
@@ -625,7 +625,7 @@ public class Controller {
         }
 
         Room room = handle(() -> roomClient.findById(oldOrder.getRoomId()),"rooms").getBody();
-        RoomType roomType = handle(() -> roomsTypeClient.findByIdRoomType(
+        RoomType roomType = handle(() -> roomClient.findByIdRoomType(
                 room.getRoomType()), "room types").getBody();
         if (newOrder.getArrivalDate() != null && !newOrder.getArrivalDate().equals(oldOrder.getArrivalDate()) &&
                 newOrder.getArrivalDate().toLocalDateTime().isAfter(LocalDateTime.now())) {
@@ -694,7 +694,7 @@ public class Controller {
         }
 
         Long tempRoomTypeId = roomResponseEntity.getBody().getRoomType();
-        ResponseEntity<RoomType> roomTypeResponseEntity = handle(() -> roomsTypeClient.findByIdRoomType(tempRoomTypeId),
+        ResponseEntity<RoomType> roomTypeResponseEntity = handle(() -> roomClient.findByIdRoomType(tempRoomTypeId),
                 "room types");
         if (roomTypeResponseEntity.getStatusCode() != HttpStatus.OK) {
             log.error(String.format("PUT/user/%d/order/%d/close: Error get room type = %d (room type service). %s",
@@ -716,7 +716,7 @@ public class Controller {
         }
         RoomType tempRoomType = roomTypeResponseEntity.getBody();
         Long roomTypeId = tempRoomType.getId();
-        roomTypeResponseEntity = handle( () -> roomsTypeClient.modifyRoomType(roomTypeId, tempRoomType), "room types");
+        roomTypeResponseEntity = handle( () -> roomClient.modifyRoomType(roomTypeId, tempRoomType), "room types");
         if (roomTypeResponseEntity.getStatusCode() != HttpStatus.OK) {
             tempRoom.setVacant(false);
             handle(() -> roomClient.modifyRoom(tempRoom.getId(), tempRoom), "rooms");
@@ -792,7 +792,7 @@ public class Controller {
                     userId, orderId, HttpStatus.BAD_REQUEST.toString()));
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        orderResponseEntity = handleDelete(() -> ordersClient.delete(orderId));
+        orderResponseEntity = handle(() -> ordersClient.delete(orderId), "orders");
         if (orderResponseEntity.getStatusCode() != HttpStatus.OK){
             log.error(String.format("DELETE/user/%d/order/%d: Error delete order. %s",
                     userId, orderId, orderResponseEntity.getStatusCode()));

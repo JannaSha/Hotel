@@ -2,7 +2,10 @@ package com.users.controllers;
 
 
 import com.fasterxml.jackson.databind.util.JSONPObject;
+import com.users.TokenManager;
+import com.users.models.Token;
 import com.users.models.User;
+import com.users.repos.TokenRepository;
 import com.users.repos.UserRepository;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +27,38 @@ public class UserController {
 
     @Autowired
     UserRepository repository;
-
+    String currentToken;
+    @Autowired
+    private TokenRepository tokenRepository;
     private static final Logger log = Logger.getLogger(UserController.class);
+
+
+    @RequestMapping(method = RequestMethod.GET, value = "/token")
+    public ResponseEntity<String> getToken(@RequestHeader HttpHeaders header) {
+        ResponseEntity<String> response;
+        HttpHeaders headers = new HttpHeaders();
+
+        if (TokenManager.getAppKey() != null && TokenManager.getAppKey().equals(header.get("Authorization").get(0))) {
+            tokenRepository.deleteAll();
+            Token temp = TokenManager.generateToken();
+            tokenRepository.save(temp);
+            headers.add("token", temp.getValue());
+            response = new ResponseEntity<>(headers, HttpStatus.OK);
+        } else {
+            response = new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        return response;
+    }
+
+
+    private ResponseEntity<User> checkToken(HttpHeaders headers) {
+        List<Token> tokens = tokenRepository.findAll();
+        if (tokens != null && tokens.size() == 1 && headers.containsKey("token") &&
+                headers.get("token").get(0).equals(tokens.get(0).getValue())) {
+            return null;
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
 
     private JSONPObject getJSONObject(String message) {
         return new JSONPObject("message", message);
@@ -34,7 +67,10 @@ public class UserController {
 
     @RequestMapping(method = RequestMethod.POST, value = "/create", consumes = "application/json",
             produces="application/json")
-    public ResponseEntity<User> createUser(@RequestBody @Valid User user) {
+    public ResponseEntity<User> createUser(@RequestBody @Valid User user, @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
+
         ResponseEntity<User> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
@@ -68,7 +104,12 @@ public class UserController {
 
     @RequestMapping(method = RequestMethod.PUT, value = "/modify/{id}",
             consumes = "application/json", produces="application/json")
-    public ResponseEntity<User> modifyUser(@PathVariable("id") long id, @RequestBody @Valid User user) {
+    public ResponseEntity<User> modifyUser(@PathVariable("id") long id,
+                                           @RequestBody @Valid User user,
+                                           @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
+
         ResponseEntity<User> response;
         HttpHeaders headers = new HttpHeaders();
 
@@ -94,7 +135,12 @@ public class UserController {
 
 
     @RequestMapping(method = RequestMethod.GET, value = "/users", params = {"page", "size"})
-    public ResponseEntity<List<User>> findAll(@RequestParam("page") Integer page, @RequestParam("size") Integer size) {
+    public ResponseEntity<List<User>> findAll(@RequestParam("page") Integer page,
+                                              @RequestParam("size") Integer size,
+                                              @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         ResponseEntity<List<User>> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
@@ -115,7 +161,10 @@ public class UserController {
     }
 
     @RequestMapping(method =  RequestMethod.GET, value = "/{id}")
-    public ResponseEntity<User> findOne(@PathVariable("id") long id) {
+    public ResponseEntity<User> findOne(@PathVariable("id") long id, @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
+
         ResponseEntity<User> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
@@ -135,7 +184,10 @@ public class UserController {
     }
 
     @RequestMapping(method =  RequestMethod.GET, value = "/username/{username}")
-    public ResponseEntity<User> findOne(@PathVariable("username") String username) {
+    public ResponseEntity<User> findOne(@PathVariable("username") String username, @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
+
         ResponseEntity<User> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
@@ -155,7 +207,11 @@ public class UserController {
     }
 
     @RequestMapping(method =  RequestMethod.GET, value = "/passport/{number}")
-    public ResponseEntity<User> findByPassportNumber(@PathVariable("number") long number) {
+    public ResponseEntity<User> findByPassportNumber(@PathVariable("number") long number,
+                                                     @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
+
         ResponseEntity<User> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
@@ -175,7 +231,10 @@ public class UserController {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/delete/{id}")
-    public ResponseEntity<User> delete(@PathVariable("id") long id) {
+    public ResponseEntity<User> delete(@PathVariable("id") long id, @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
+
         ResponseEntity<User> response;
 
         if (!repository.exists(id)) {

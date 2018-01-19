@@ -2,8 +2,11 @@ package com.orders.controllers;
 
 
 import com.fasterxml.jackson.databind.util.JSONPObject;
+import com.orders.TokenManager;
 import com.orders.models.Order;
+import com.orders.models.Token;
 import com.orders.repos.OrderRepository;
+import com.orders.repos.TokenRepository;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -29,21 +32,50 @@ public class OrderController {
 
     @Autowired
     private OrderRepository repository;
+    @Autowired
+    private TokenRepository tokenRepository;
+
 
     private static final Logger log = Logger.getLogger(OrderController.class);
 
-    private JSONPObject getJSONObject(String message) {
-        return new JSONPObject("message", message);
+    @RequestMapping(method = RequestMethod.GET, value = "/token")
+    public ResponseEntity<String> getToken(@RequestHeader HttpHeaders header) {
+        ResponseEntity<String> response;
+        HttpHeaders headers = new HttpHeaders();
+
+        if (TokenManager.getAppKey() != null && TokenManager.getAppKey().equals(header.get("Authorization").get(0))) {
+            tokenRepository.deleteAll();
+            Token temp = TokenManager.generateToken();
+            tokenRepository.save(temp);
+            headers.add("token", temp.getValue());
+            response = new ResponseEntity<>(headers, HttpStatus.OK);
+        } else {
+            response = new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        return response;
     }
+
+
+    private ResponseEntity<Order> checkToken(HttpHeaders headers) {
+        List<Token> tokens = tokenRepository.findAll();
+        if (tokens != null && tokens.size() == 1 && headers.containsKey("token") &&
+                headers.get("token").get(0).equals(tokens.get(0).getValue())) {
+            return null;
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
 
     @RequestMapping(method = RequestMethod.POST, value = "/create", consumes = "application/json",
             produces="application/json")
-    public ResponseEntity<Order> createOrder(@RequestBody @Valid Order order) {
+    public ResponseEntity<Order> createOrder(@RequestBody @Valid Order order, @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
+
         ResponseEntity<Order> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
         order.setOrderDate(new Timestamp(System.currentTimeMillis()));
-        System.out.println("Current = "+ order.getOrderDate().toString());
 
         if (!repository.exists(order.getId())) {
             if (repository.save(order) != null) {
@@ -70,7 +102,11 @@ public class OrderController {
 
     @RequestMapping(method = RequestMethod.GET, value = "/orders", params = {"page", "size"})
     public ResponseEntity<List<Order>> findAllOrders(@RequestParam("page") Integer page,
-                                                @RequestParam("size") Integer size) {
+                                                     @RequestParam("size") Integer size,
+                                                     @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
         ResponseEntity<List<Order>> response;
@@ -90,7 +126,10 @@ public class OrderController {
 
 
     @RequestMapping(method =  RequestMethod.GET, value = "/{id}")
-    public ResponseEntity<Order> findById(@PathVariable("id") long id) {
+    public ResponseEntity<Order> findById(@PathVariable("id") long id, @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
+
         ResponseEntity<Order> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
@@ -111,7 +150,10 @@ public class OrderController {
     }
 
     @RequestMapping(method =  RequestMethod.GET, value = "/user/{id}",  produces="application/json;charset=UTF-8")
-    public ResponseEntity<List<Order>> findByUserId(@PathVariable("id") long id) {
+    public ResponseEntity<List<Order>> findByUserId(@PathVariable("id") long id, @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         ResponseEntity<List<Order>> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
@@ -133,7 +175,12 @@ public class OrderController {
 
     @RequestMapping(method = RequestMethod.PUT, value = "/modify/{id}", consumes = "application/json",
             produces="application/json")
-    public ResponseEntity<Order> modifyOrder(@PathVariable("id") long id, @RequestBody @Valid Order order) {
+    public ResponseEntity<Order> modifyOrder(@PathVariable("id") long id,
+                                             @RequestBody @Valid Order order,
+                                             @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
+
         ResponseEntity<Order> response;
         HttpHeaders headers = new HttpHeaders();
 
@@ -157,9 +204,11 @@ public class OrderController {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/delete/{id}")
-    public ResponseEntity<Order> delete(@PathVariable("id") long id) {
-        ResponseEntity<Order> response;
+    public ResponseEntity<Order> delete(@PathVariable("id") long id, @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
 
+        ResponseEntity<Order> response;
         if (!repository.exists(id)) {
 //            response = new ResponseEntity<>(getJSONObject("Error trying deleting order id = " + id),
 //                    new HttpHeaders(), HttpStatus.NOT_FOUND);

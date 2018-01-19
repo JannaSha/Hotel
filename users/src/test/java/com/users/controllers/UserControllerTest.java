@@ -98,7 +98,7 @@ public class UserControllerTest {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        assertEquals("bad", users, userController.findAll(page, size).getBody());
+        assertEquals("bad", users, userController.findAll(page, size, null).getBody());
     }
 
     @Test

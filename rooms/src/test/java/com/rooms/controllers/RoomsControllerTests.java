@@ -104,7 +104,7 @@ public class RoomsControllerTests {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        assertEquals("bad", rooms, roomController.findAll(page, size).getBody());
+        assertEquals("bad", rooms, roomController.findAll(page, size, null).getBody());
     }
 
     @Test
@@ -146,7 +146,7 @@ public class RoomsControllerTests {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        assertEquals("bad", rooms, roomController.findByType(1, true).getBody());
+        assertEquals("bad", rooms, roomController.findByType(1, true, null).getBody());
 
     }
 

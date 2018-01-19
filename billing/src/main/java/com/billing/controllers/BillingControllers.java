@@ -1,8 +1,10 @@
 package com.billing.controllers;
 
+import com.billing.TokenManager;
 import com.billing.models.Billing;
+import com.billing.models.Token;
 import com.billing.repos.BillingRepository;
-import com.fasterxml.jackson.databind.util.JSONPObject;
+import com.billing.repos.TokenRepository;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -12,11 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
-import javax.xml.ws.http.HTTPException;
 import java.util.List;
 
 @RestController
@@ -25,18 +25,46 @@ import java.util.List;
 public class BillingControllers {
 
     @Autowired
-    BillingRepository repository;
+    private BillingRepository repository;
+    @Autowired
+    private TokenRepository tokenRepository;
 
+    @RequestMapping(method = RequestMethod.GET, value = "/token")
+    public ResponseEntity<String> getToken(@RequestHeader HttpHeaders header) {
+        ResponseEntity<String> response;
+        HttpHeaders headers = new HttpHeaders();
+
+        if (TokenManager.getAppKey() != null && TokenManager.getAppKey().equals(header.get("Authorization").get(0))) {
+            tokenRepository.deleteAll();
+            Token temp = TokenManager.generateToken();
+            tokenRepository.save(temp);
+            headers.add("token", temp.getValue());
+            response = new ResponseEntity<>(headers, HttpStatus.OK);
+        } else {
+            response = new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        return response;
+    }
+
+
+    private ResponseEntity<Billing> checkToken(HttpHeaders headers) {
+        List<Token> tokens = tokenRepository.findAll();
+        if (tokens != null && tokens.size() == 1 && headers.containsKey("token") &&
+                headers.get("token").get(0).equals(tokens.get(0).getValue())) {
+            return null;
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
     private static final Logger log = Logger.getLogger(BillingRepository.class);
 
 
-    private JSONPObject getJSONObject(String message) {
-        return new JSONPObject("message", message);
-    }
-
     @RequestMapping(method = RequestMethod.POST, value = "/create", consumes = "application/json",
             produces="application/json")
-    public ResponseEntity<Billing> createBill(@RequestBody @Valid Billing bill) {
+    public ResponseEntity<Billing> createBill(@RequestBody @Valid Billing bill,
+                                              @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
+
         ResponseEntity<Billing> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
@@ -58,7 +86,10 @@ public class BillingControllers {
 
     @RequestMapping(method = RequestMethod.PUT, value = "/modify/{id}",
             consumes = "application/json", produces="application/json")
-    public ResponseEntity<Billing> modifyBill(@PathVariable("id") long id, @RequestBody @Valid Billing bill) {
+    public ResponseEntity<Billing> modifyBill(@PathVariable("id") long id, @RequestBody @Valid Billing bill,
+                                              @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
         ResponseEntity<Billing> response;
         HttpHeaders headers = new HttpHeaders();
 
@@ -85,7 +116,11 @@ public class BillingControllers {
     @RequestMapping(method = RequestMethod.GET, value = "/billings", produces="application/json;charset=UTF-8",
             params = {"page", "size"})
     public ResponseEntity<List<Billing>> findAll(@RequestParam("page") Integer page,
-                                                 @RequestParam("size") Integer size) {
+                                                 @RequestParam("size") Integer size,
+                                                 @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
         if (page < 0 || size < 0) {
@@ -100,7 +135,11 @@ public class BillingControllers {
     }
 
     @RequestMapping(method =  RequestMethod.GET, value = "/{id}")
-    public ResponseEntity<Billing> findOne(@PathVariable long id) {
+    public ResponseEntity<Billing> findOne(@PathVariable long id,
+                                           @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
+
         ResponseEntity<Billing> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
@@ -129,7 +168,11 @@ public class BillingControllers {
 
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/delete/{id}")
-    public ResponseEntity<Billing> delete(@PathVariable long id) {
+    public ResponseEntity<Billing> delete(@PathVariable long id,
+                                          @RequestHeader HttpHeaders header) {
+        if (checkToken(header) != null)
+            return checkToken(header);
+
         ResponseEntity<Billing> response;
 
         if (!repository.exists(id)) {

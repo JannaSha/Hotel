@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 
 
-public class OrdersClient {
+public class OrdersClient extends TokenClient {
 
     private String serviceUrl = "http://localhost:5555/order";
     private RestTemplate restTemplate;
@@ -25,25 +25,59 @@ public class OrdersClient {
     }
 
     public ResponseEntity<Order> findById(long id) {
-        return restTemplate.getForEntity(serviceUrl + String.format("/%d", id), Order.class);
+        if (setToken(serviceUrl + "/token", restTemplate)) {
+            HttpHeaders appHashHeaders = new HttpHeaders();
+            appHashHeaders.add("token", token);
+            HttpEntity<String> entity = new HttpEntity<>("parameters", appHashHeaders);
+            return restTemplate.exchange(serviceUrl + String.format("/%d", id), HttpMethod.GET, entity, Order.class);
+        } else {
+            return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
+        }
     }
 
     public ResponseEntity<Order> createOrder(Order order) {
-        return restTemplate.exchange(serviceUrl + "/create", HttpMethod.POST, new HttpEntity<>(order), Order.class);
+        if (setToken(serviceUrl + "/token", restTemplate)) {
+            HttpHeaders appHashHeaders = new HttpHeaders();
+            appHashHeaders.add("token", token);
+            HttpEntity<Order> entity = new HttpEntity<>(order, appHashHeaders);
+            return restTemplate.exchange(serviceUrl + "/create", HttpMethod.POST, entity, Order.class);
+        } else {
+            return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
+        }
     }
 
     public ResponseEntity<Order[]> findByUserId(long id) {
-        return restTemplate.getForEntity(serviceUrl + String.format("/user/%d", id), Order[].class);
+        if (setToken(serviceUrl + "/token", restTemplate)) {
+            HttpHeaders appHashHeaders = new HttpHeaders();
+            appHashHeaders.add("token", token);
+            HttpEntity<String> entity = new HttpEntity<>("parameters", appHashHeaders);
+            return restTemplate.exchange(serviceUrl + String.format("/user/%d", id), HttpMethod.GET, entity, Order[].class);
+        } else {
+            return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
+        }
     }
 
     public ResponseEntity<Order> modifyOrder(long id, Order order) {
-        return restTemplate.exchange(serviceUrl + String.format("/modify/%d", id),
-                HttpMethod.PUT, new HttpEntity<>(order), Order.class);
+        if (setToken(serviceUrl + "/token", restTemplate)) {
+            HttpHeaders appHashHeaders = new HttpHeaders();
+            appHashHeaders.add("token", token);
+            HttpEntity<Order> entity = new HttpEntity<>(order, appHashHeaders);
+            return restTemplate.exchange(serviceUrl + String.format("/modify/%d", id),
+                HttpMethod.PUT, entity, Order.class);
+        } else {
+            return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
+        }
     }
 
-    public Void delete(long id) {
-        restTemplate.delete(serviceUrl + String.format("/delete/%d", id));
-        return null;
+    public ResponseEntity<Order> delete(long id) {
+        if (setToken(serviceUrl + "/token", restTemplate)) {
+            HttpHeaders appHashHeaders = new HttpHeaders();
+            appHashHeaders.add("token", token);
+            HttpEntity<String> entity = new HttpEntity<>("parameters", appHashHeaders);
+            return restTemplate.exchange(serviceUrl + String.format("/delete/%d", id), HttpMethod.DELETE, entity, Order.class);
+        } else {
+            return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
+        }
     }
 
 }
