@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -14,21 +16,39 @@ public class AuthService {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-
     @Autowired
     private AuthRepository repository;
 
     public void create(Auth auth) {
 
         Auth existing = repository.findByUsername(auth.getUsername());
-        Assert.isNull(existing, "auth already exists: " + auth.getUsername());
+        if (existing == null) {
+            auth.setPassword(getEncodePassword(auth.getPassword()));
+            auth.setUsername(auth.getUsername());
+            repository.save(auth);
+            log.info(String.format("New user %s has been created", auth.getUsername()));
+        } else {
+            log.error(String.format("Auth %s already exist", auth.getUsername()));
+        }
+    }
 
-        String hash = encoder.encode(auth.getPassword());
-        auth.setPassword(hash);
+    public Auth getByUsername(String username) {
+        Auth auth = repository.findByUsername(username);
+        if (auth == null) {
+            log.error(String.format("User %s does not exist", username));
+        } else {
+            log.info(String.format("User %s is got", username));
+        }
+        return auth;
+    }
 
-        repository.save(auth);
+    private String getEncodePassword(String password) {
+        PasswordEncoder pe = new StandardPasswordEncoder();
+        return pe.encode(password);
+    }
 
-        log.info("new user has been created: {}", auth.getUsername());
+    public Boolean passwordMath(String password, String passwordEnc) {
+        PasswordEncoder pe = new StandardPasswordEncoder();
+        return pe.matches(password, passwordEnc);
     }
 }
