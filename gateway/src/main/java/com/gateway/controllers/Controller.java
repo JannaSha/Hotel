@@ -802,6 +802,36 @@ public class Controller {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @RequestMapping(method = RequestMethod.POST, value = "/token")
+    public ResponseEntity<String> make_auth(@RequestHeader HttpHeaders header) {
+        if (!header.containsKey("password") || !header.containsKey("username") || !header.containsKey("secret")) {
+            return new ResponseEntity<String>(HttpStatus.UNAUTHORIZED);
+        }
+        String password = header.get("password").get(0);
+        String username = header.get("username").get(0);
+        String secret = header.get("secret").get(0);
+
+        ResponseEntity<String> authResponse = handle(() -> authClient.makeAuth(password, username, secret), "auth");
+        if (authResponse.getStatusCode() == HttpStatus.OK) {
+            HttpHeaders backHeader = new HttpHeaders();
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode actualObj;
+            try {
+                actualObj = mapper.readTree(authResponse.getBody());
+            } catch (IOException ex) {
+                log.error(String.format("GET/token: Error parse json auth file. %s",
+                        HttpStatus.INTERNAL_SERVER_ERROR.toString()));
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            backHeader.add("access_token", actualObj.get("access_token").toString());
+            backHeader.add("scope", actualObj.get("scope").toString());
+            backHeader.add("refresh_token", actualObj.get("refresh_token").toString());
+            return new ResponseEntity<String>(backHeader, HttpStatus.OK);
+        }
+            return authResponse;
+    }
+
     private <T> ResponseEntity<T> handle(Supplier<ResponseEntity<T>> supplier, String serviceName) {
         try {
             ResponseEntity<T> temp = supplier.get();

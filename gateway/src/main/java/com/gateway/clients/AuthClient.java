@@ -21,4 +21,14 @@ public class AuthClient {
         System.out.println(entity.getHeaders());
         return restTemplate.exchange(serviceUrl + "/current", HttpMethod.GET, entity, String.class);
     }
+    public ResponseEntity<String> makeAuth (String password, String username, String secret) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Basic " + secret);
+        HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
+//        System.out.println(entity.getHeaders());
+        String tempUrl = "http://localhost:8081/oauth/token?grant_type=password&redirect_uri=https://www.yandex.ru&username="
+                + username + "&password=" + password;
+        return restTemplate.exchange(tempUrl, HttpMethod.POST, entity, String.class);
+    }
 }
+

@@ -254,18 +254,34 @@ def auth_user(request):
             v_password = data['password']
             v_username = data['username']
             scope = base64.b64encode(b'client:ui-secret')
-            header = {"Authorization": "Basic " + scope.decode('utf-8')}
-            url = "http://localhost:8081/oauth/token?grant_type=password&redirect_uri=https://www.yandex.ru&username=" + v_username + "&password=" + v_password
+            header = {"authorization": "Basic " + scope.decode('utf-8'), "password": v_password, "username": v_username, 'secret':scope}
+            # url = "http://localhost:8081/oauth/token?grant_type=password&redirect_uri=https://www.yandex.ru&username=" + v_username + "&password=" + v_password
+            url = 'http://localhost:1212/hotel/token'
             try:
                 response = requests.post(url, headers=header)
                 print("CODE = ", response.status_code)
             except Exception as ecx:
-                return render(request, 'hotel/auth.html', {'mainerror':'EXEPTIONСервис недоступен'})
+                template = loader.get_template('hotel/auth.html')
+                context = {'mainerror':'EXEPTION Сервис недоступен'}
+                main_response = HttpResponse(template.render(context, request))
+                main_response.delete_cookie('password')
+                main_response.delete_cookie('username')
+                return main_response
             print(response.status_code)
             if response.status_code == 401:
-                return render(request, 'hotel/auth.html', {'error':'Неверное имя пользователя или пароль', 'form':form})
+                template = loader.get_template('hotel/auth.html')
+                context = {'error':'Неверный логин и пароль'}
+                main_response = HttpResponse(template.render(context, request))
+                main_response.delete_cookie('password')
+                main_response.delete_cookie('username')
+                return main_response
             if response.status_code != 200:
-                return render(request, 'hotel/auth.html', {'error':'Ошибка авторизации', 'form':form})
+                template = loader.get_template('hotel/auth.html')
+                context = {'error':'Ошибка аворизации'}
+                main_response = HttpResponse(template.render(context, request))
+                main_response.delete_cookie('password')
+                main_response.delete_cookie('username')
+                return main_response
             template = loader.get_template('hotel/auth.html')
             context = {'error':'good', 'form':form}
             main_response = HttpResponse(template.render(context, request))
