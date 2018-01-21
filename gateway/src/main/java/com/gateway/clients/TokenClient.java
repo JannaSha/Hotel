@@ -23,7 +23,6 @@ public abstract class TokenClient {
             ResponseEntity<String> tokenResponse;
             appHashHeaders.add("Authorization", tokenManage.getHashAppParams());
             HttpEntity<String> entity = new HttpEntity<>("parameters", appHashHeaders);
-            System.out.println(entity.getHeaders());
             try {
                 tokenResponse = restTemplate.exchange(path, HttpMethod.GET, entity, String.class);
             } catch (HttpClientErrorException | HttpServerErrorException | ResourceAccessException exc) {

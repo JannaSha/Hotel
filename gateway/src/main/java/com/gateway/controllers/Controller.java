@@ -159,7 +159,17 @@ public class Controller {
     /* Получение всех комнат в отеле */
     @RequestMapping(method = RequestMethod.GET, value = "/rooms",
             params = {"page", "size"}, produces="application/json")
-    public Object getAllRooms(@RequestParam("page") Integer page, @RequestParam("size") Integer size){
+    public Object getAllRooms(@RequestParam("page") Integer page,
+                              @RequestParam("size") Integer size,
+                              @RequestHeader HttpHeaders head) {
+        if (!head.containsKey("scope")) {
+            log.error("/roomtype: No scope in header");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        if (!head.get("scope").get(0).equals("ui") && !head.get("scope").get(0).equals("api")) {
+            log.error("/roomtype: Scope does not equal ui or api");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         ResponseEntity<Object> responseEntity = handle(() -> roomClient.findAll(page, size), "room");
         if (responseEntity.getStatusCode() == HttpStatus.OK) {
             log.info("GET/rooms: Get rooms successfully. " + responseEntity.getStatusCode().toString());
@@ -170,13 +180,49 @@ public class Controller {
     /* Получение всех типов комнат в отеле */
     @RequestMapping(method = RequestMethod.GET, value = "/roomtypes",
             params = {"page", "size"}, produces="application/json")
-    public Object getAllRoomTypes(@RequestParam("page") Integer page, @RequestParam("size") Integer size){
+    public Object getAllRoomTypes(@RequestParam("page") Integer page,
+                                  @RequestParam("size") Integer size,
+                                  @RequestHeader HttpHeaders header){
+        if (!header.containsKey("scope")) {
+            log.error("/roomtype: No scope in header");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        if (!header.get("scope").get(0).equals("ui") && !header.get("scope").get(0).equals("api")) {
+            log.error("/roomtype: Scope does not equal ui or api");
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        if (header.get("scope").get(0).equals("api")) {
+            ResponseEntity<String> authResponse = handle(() -> authClient.getCurrent(header), "auth");
+            if (authResponse.getStatusCode() == HttpStatus.UNAUTHORIZED ||
+                    authResponse.getStatusCode() == HttpStatus.FORBIDDEN) {
+                log.error(String.format("GET/roomtypes: Token does not exist. %s",
+                         authResponse.getStatusCode().toString()));
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+            if (authResponse.getStatusCode() != HttpStatus.OK) {
+                log.error(String.format("GET/roomtypes: Can not get token. %s",
+                        authResponse.getStatusCode().toString()));
+                return new ResponseEntity<>(authResponse.getStatusCode());
+            }
+
+//            ObjectMapper mapper = new ObjectMapper();
+//            JsonNode actualObj;
+//            try {
+//                actualObj = mapper.readTree(authResponse.getBody());
+//            } catch (IOException ex) {
+//                log.error(String.format("GET/roomtypes: Error parse json auth file. %s",
+//                        HttpStatus.INTERNAL_SERVER_ERROR.toString()));
+//                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+//            }
+        }
+
         ResponseEntity<Object> responseEntity = handle(() -> roomClient.findAllRoomsType(page, size),
                 "room types");
         if (responseEntity.getStatusCode() == HttpStatus.OK) {
             log.info("GET/roomtypes: Get room types types successfully. " + responseEntity.getStatusCode().toString());
         }
         return responseEntity;
+
     }
 
     /* Получение описания заказа авторизованным пользователем */
@@ -227,7 +273,7 @@ public class Controller {
         }
         ResponseEntity<Order> orderResponseEntity = handle(() -> ordersClient.findById(orderId), "orders");
         if (orderResponseEntity.getStatusCode() == HttpStatus.OK) {
-            log.error(String.format("GET/user/%s/order/%d: Get order's description successfully. %s",
+            log.info(String.format("GET/user/%s/order/%d: Get order's description successfully. %s",
                     username, orderId, orderResponseEntity.getStatusCode().toString()));
         }
         return orderResponseEntity;
@@ -299,7 +345,6 @@ public class Controller {
                         handle( () -> billClient.findOne(item.getBillId()), "billings");
                 if (tempBill.getStatusCode() == HttpStatus.OK) {
                     orderGetterTemp.setBillId(tempBill.getBody());
-                    System.out.println();
                 }
                 else {
                     orderGetterTemp.setBillId(null);
@@ -325,7 +370,7 @@ public class Controller {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
 
-        log.error(String.format("GET/user/%d/orders: Get user's orders successfully. %s",
+        log.info(String.format("GET/user/%d/orders: Get user's orders successfully. %s",
                 userId, responseEntityUser.getStatusCode().toString()));
         return new ResponseEntity<>(orderGetters, headers, HttpStatus.OK);
     }
@@ -802,34 +847,24 @@ public class Controller {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/token")
-    public ResponseEntity<String> make_auth(@RequestHeader HttpHeaders header) {
-        if (!header.containsKey("password") || !header.containsKey("username") || !header.containsKey("secret")) {
-            return new ResponseEntity<String>(HttpStatus.UNAUTHORIZED);
+    @RequestMapping(method = RequestMethod.GET, value = "/token", produces="application/json")
+    public ResponseEntity<Object> make_auth(@RequestHeader HttpHeaders header) {
+        if (!header.containsKey("password") || !header.containsKey("username") || !header.containsKey("authorization")) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         String password = header.get("password").get(0);
         String username = header.get("username").get(0);
-        String secret = header.get("secret").get(0);
+        String authorization = header.get("authorization").get(0);
 
-        ResponseEntity<String> authResponse = handle(() -> authClient.makeAuth(password, username, secret), "auth");
+        ResponseEntity<String> authResponse = handle(() -> authClient.makeAuth(password, username, authorization), "auth");
         if (authResponse.getStatusCode() == HttpStatus.OK) {
-            HttpHeaders backHeader = new HttpHeaders();
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode actualObj;
-            try {
-                actualObj = mapper.readTree(authResponse.getBody());
-            } catch (IOException ex) {
-                log.error(String.format("GET/token: Error parse json auth file. %s",
-                        HttpStatus.INTERNAL_SERVER_ERROR.toString()));
-                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            backHeader.add("access_token", actualObj.get("access_token").toString());
-            backHeader.add("scope", actualObj.get("scope").toString());
-            backHeader.add("refresh_token", actualObj.get("refresh_token").toString());
-            return new ResponseEntity<String>(backHeader, HttpStatus.OK);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Type", "application/json;charset=UTF-8");
+            log.info("/token: token get successfully " + HttpStatus.OK.toString());
+            return new ResponseEntity<>(authResponse.getBody(), headers, HttpStatus.OK);
         }
-            return authResponse;
+        log.error("/token error getting token " + authResponse.getStatusCode().toString());
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
     private <T> ResponseEntity<T> handle(Supplier<ResponseEntity<T>> supplier, String serviceName) {

@@ -9,7 +9,7 @@ import java.sql.Timestamp;
 
 public class AuthClient {
 
-    private String serviceUrl = "http://localhost:8081/auth";
+    private String serviceUrl = "http://localhost:8081/";
     private RestTemplate restTemplate;
 
     public AuthClient() {
@@ -18,16 +18,14 @@ public class AuthClient {
 
     public ResponseEntity<String> getCurrent (HttpHeaders headers) {
         HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
-        System.out.println(entity.getHeaders());
         return restTemplate.exchange(serviceUrl + "/current", HttpMethod.GET, entity, String.class);
     }
-    public ResponseEntity<String> makeAuth (String password, String username, String secret) {
+    public ResponseEntity<String> makeAuth (String password, String username, String authorization) {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Basic " + secret);
+        headers.add("Authorization",  authorization);
         HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
-//        System.out.println(entity.getHeaders());
-        String tempUrl = "http://localhost:8081/oauth/token?grant_type=password&redirect_uri=https://www.yandex.ru&username="
-                + username + "&password=" + password;
+        String tempUrl = String.format("http://localhost:8081/oauth/token?redirect_uri=https:/" +
+                "/www.yandex.ru&grant_type=password&username=%s&password=%s", username, password);
         return restTemplate.exchange(tempUrl, HttpMethod.POST, entity, String.class);
     }
 }

@@ -22,9 +22,10 @@ def get_message(code):
 
 def show_rooms(request, page, size):
     url = 'http://localhost:1212/hotel/rooms?page=' + page + '&size=' + size
+    header = {'scope': 'ui'}
     response = None
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=header)
     except Exception:
         context = {'error':'Сервис недоступен'}
         return render(request, 'hotel/rooms_list.html', context)
@@ -38,9 +39,10 @@ def show_rooms(request, page, size):
 
 def index_page(request):
     url = 'http://localhost:1212/hotel/roomtypes?page=0&size=10'
+    header = {'scope': 'ui'}
     response = None
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=header)
     except Exception:
         context = {'error':'Сервис недоступен'}
         return render(request, 'hotel/index.html', context)
@@ -53,12 +55,10 @@ def index_page(request):
 
 def show_rooms_type(request, page, size):
     url = 'http://localhost:1212/hotel/roomtypes?page=' + page + '&size=' + size
-    print(url)
-    response = requests.get(url)
-    print('response  ', response)
+    header = {'scope': 'ui'}
+    response = requests.get(url, headers=header)
     rooms = response.json()[0]['content']
     context = {'rooms':rooms}
-    print(rooms)
     return render(request, 'hotel/index.html', context)
 
 def show_orders(request):
@@ -254,11 +254,11 @@ def auth_user(request):
             v_password = data['password']
             v_username = data['username']
             scope = base64.b64encode(b'client:ui-secret')
-            header = {"authorization": "Basic " + scope.decode('utf-8'), "password": v_password, "username": v_username, 'secret':scope}
+            header = {"authorization": "Basic " + scope.decode('utf-8'), "password": v_password, "username": v_username}
             # url = "http://localhost:8081/oauth/token?grant_type=password&redirect_uri=https://www.yandex.ru&username=" + v_username + "&password=" + v_password
             url = 'http://localhost:1212/hotel/token'
             try:
-                response = requests.post(url, headers=header)
+                response = requests.get(url, headers=header)
                 print("CODE = ", response.status_code)
             except Exception as ecx:
                 template = loader.get_template('hotel/auth.html')
@@ -267,17 +267,16 @@ def auth_user(request):
                 main_response.delete_cookie('password')
                 main_response.delete_cookie('username')
                 return main_response
-            print(response.status_code)
             if response.status_code == 401:
                 template = loader.get_template('hotel/auth.html')
-                context = {'error':'Неверный логин и пароль'}
+                context = {'form':form, 'error':'Неверный логин и пароль'}
                 main_response = HttpResponse(template.render(context, request))
                 main_response.delete_cookie('password')
                 main_response.delete_cookie('username')
                 return main_response
             if response.status_code != 200:
                 template = loader.get_template('hotel/auth.html')
-                context = {'error':'Ошибка аворизации'}
+                context = {'form':form, 'error':'Ошибка аворизации'}
                 main_response = HttpResponse(template.render(context, request))
                 main_response.delete_cookie('password')
                 main_response.delete_cookie('username')
@@ -287,6 +286,7 @@ def auth_user(request):
             main_response = HttpResponse(template.render(context, request))
             main_response.set_cookie('password', v_password)
             main_response.set_cookie('username', v_username)
+        
             expires = datetime.datetime.strftime(datetime.datetime.utcnow() + datetime.timedelta(seconds=response.json()['expires_in']), "%a, %d-%b-%Y %H:%M:%S GMT")
             main_response.set_cookie('access_token', response.json()['access_token'], expires=expires, max_age=response.json()['expires_in'])
             main_response.set_cookie('refresh_token', response.json()['refresh_token'])

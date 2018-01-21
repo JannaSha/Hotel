@@ -16,8 +16,6 @@ public class TokenManage {
     private final String APP_KEY = "appkey";
     private final String APP_SECRET = "appsecret";
 
-//    private List<Timestamp> tokesValidationTimes;
-//    private List<String> tokens;
 
     public String getAPP_KEY() {
         return APP_KEY;
@@ -35,7 +33,6 @@ public class TokenManage {
         } catch (UnsupportedEncodingException exc) {
             return null;
         }
-//        String hash = "35454B055CC325EA1AF2126E27707052";
         return  md5Hex;
     }
 
