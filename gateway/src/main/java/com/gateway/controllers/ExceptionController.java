@@ -17,7 +17,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import javax.naming.ServiceUnavailableException;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
-import javax.ws.rs.*;
+//import javax.ws.rs.*;
 
 @ControllerAdvice(annotations = {RestController.class})
 class ExceptionController {
@@ -68,11 +68,11 @@ class ExceptionController {
         return new ErrorEntity(HttpStatus.SERVICE_UNAVAILABLE.value(), exc.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    @ExceptionHandler({NotAuthorizedException.class})
-    public ErrorEntity handleInternalServerError(NotAuthorizedException exc) {
-        log.error(HttpStatus.UNAUTHORIZED.toString() + exc.getMessage());
-        return new ErrorEntity(HttpStatus.UNAUTHORIZED.value(), exc.getMessage());
-    }
+//    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+//    @ExceptionHandler({NotAuthorizedException.class})
+//    public ErrorEntity handleInternalServerError(NotAuthorizedException exc) {
+//        log.error(HttpStatus.UNAUTHORIZED.toString() + exc.getMessage());
+//        return new ErrorEntity(HttpStatus.UNAUTHORIZED.value(), exc.getMessage());
+//    }
 
 }

@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>gateway</artifactId>
+    <artifactId>statistic</artifactId>
 
     <properties>
         <spring.boot.starter.version>2.0.0.RELEASE</spring.boot.starter.version>
@@ -27,6 +27,7 @@
         <com.h2database.h2>1.4.197</com.h2database.h2>
         <spring.boot.devtools>2.0.0.RELEASE</spring.boot.devtools>
     </properties>
+
 
     <dependencies>
         <dependency>

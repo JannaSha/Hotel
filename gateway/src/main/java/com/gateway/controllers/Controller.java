@@ -6,10 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gateway.models.*;
 import com.gateway.clients.*;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
@@ -50,6 +52,15 @@ public class Controller {
 
     private final Integer MAX_QUEUE_SIZE = 10;
 
+    @Autowired
+    KafkaProducer producer;
+
+    @RequestMapping(method=RequestMethod.GET, value="/producer")
+    public String producer(@RequestParam("data")String data){
+        producer.send(data);
+        System.out.println("Done");
+        return "Done";
+    }
 
     private BigDecimal getPrice(Integer nightAmount, BigDecimal nightPrice, Integer userOrderAmount) {
         BigDecimal cost = nightPrice.multiply(new BigDecimal(nightAmount));
