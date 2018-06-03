@@ -17,7 +17,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import javax.naming.ServiceUnavailableException;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
-//import javax.ws.rs.*;
 
 @ControllerAdvice(annotations = {RestController.class})
 class ExceptionController {

@@ -20,6 +20,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "roomtype")
@@ -102,7 +103,7 @@ public class RoomTypeController {
         ResponseEntity<RoomType> response;
         HttpHeaders headers = new HttpHeaders();
 
-        if (!repository.exists(id)) {
+        if (!repository.existsById(id)) {
 //            response = new ResponseEntity<>(getJSONObject("Error trying modify room type id = " + id),
 //                    headers, HttpStatus.NOT_FOUND);
             response = new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -156,9 +157,9 @@ public class RoomTypeController {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
 
-        if (repository.exists(id)) {
-            RoomType roomType = repository.findOne(id);
-            response = new ResponseEntity<>(roomType, headers, HttpStatus.OK);
+        if (repository.existsById(id)) {
+            Optional<RoomType> roomType = repository.findById(id);
+            response = new ResponseEntity<>(roomType.get(), headers, HttpStatus.OK);
             log.info("Show room type successfully id = " + id);
         }
         else {
@@ -177,14 +178,14 @@ public class RoomTypeController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
         ResponseEntity<RoomType> response;
-        if (!repository.exists(id)) {
+        if (!repository.existsById(id)) {
 //            response = new ResponseEntity<>(getJSONObject("Error trying deleting room type id = " + id),
 //                    new HttpHeaders(), HttpStatus.NOT_FOUND);
             response = new ResponseEntity<>(HttpStatus.NOT_FOUND);
             log.error("Error trying deleting room type id = " + id);
         }
         else {
-            repository.delete(id);
+            repository.deleteById(id);
             response = new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
             log.info("Successfully delete room type id = " + id);
         }

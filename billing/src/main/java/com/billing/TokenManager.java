@@ -1,8 +1,6 @@
 package com.billing;
 
 import com.billing.models.Token;
-import com.billing.repos.TokenRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
 
 import java.io.UnsupportedEncodingException;

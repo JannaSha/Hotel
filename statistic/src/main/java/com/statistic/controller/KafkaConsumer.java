@@ -1,5 +1,6 @@
 package com.statistic.controller;
 
+import com.object.OrderKafka;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +16,10 @@ public class KafkaConsumer {
     @Autowired
     MessageStorage storage;
 
-    @KafkaListener(topics="${app.topic.foo}")
-    public void processMessage(String content) {
+    @KafkaListener(topics="${app.topic.order}")
+    public void processMessage(OrderKafka content) {
         log.info("received content = '{}'", content);
-        System.out.println("MESSAGE = " + content);
+        System.out.println("MESSAGE = " + content.toString());
         storage.put(content);
     }
 }

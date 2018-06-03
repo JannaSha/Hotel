@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/room")
@@ -80,8 +81,8 @@ public class RoomController {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
 
-        if (!repository.exists(room.getId()) && repository.save(room) != null &&
-                repositoryType.exists(room.getRoomType())) {
+        if (!repository.existsById(room.getId()) && repository.save(room) != null &&
+                repositoryType.existsById(room.getRoomType())) {
             headers.setLocation(ServletUriComponentsBuilder
                     .fromCurrentServletMapping().path("/room/{id}").build()
                     .expand(room.getId()).toUri());
@@ -109,7 +110,7 @@ public class RoomController {
         ResponseEntity<Room> response;
         HttpHeaders headers = new HttpHeaders();
 
-        if (!repository.exists(id)) {
+        if (!repository.existsById(id)) {
 //            response = new ResponseEntity<>(getJSONObject("Error modify room, room is not found id = " + id),
 //                    headers, HttpStatus.NOT_FOUND);
             response = new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -135,19 +136,19 @@ public class RoomController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
         ResponseEntity<Room> response;
-        Room room;
+        Optional<Room> room;
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
-        if (!repository.exists(id)) {
+        if (!repository.existsById(id)) {
 //            response = new ResponseEntity<>(getJSONObject("Error get room, room is not found id = "),
 //                    headers, HttpStatus.NOT_FOUND);
             response = new ResponseEntity<>(HttpStatus.NOT_FOUND);
             log.error("Error get room, room is not found id = " + id);
         }
         else {
-            room = repository.findOne(id);
-            response = new ResponseEntity<>(room, headers, HttpStatus.OK);
+            room = repository.findById(id);
+            response = new ResponseEntity<>(room.get(), headers, HttpStatus.OK);
             log.info("Successfully get room id = " + id);
         }
         return response;
@@ -185,14 +186,14 @@ public class RoomController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
         ResponseEntity<Room> response;
-        if (!repository.exists(id)) {
+        if (!repository.existsById(id)) {
 //            response = new ResponseEntity<>(getJSONObject("Error delete room, room is not found id = " + id),
 //                    new HttpHeaders(), HttpStatus.NOT_FOUND);
             response = new ResponseEntity<>(HttpStatus.NOT_FOUND);
             log.error("Error delete room, room is not found id = " + id);
         }
         else {
-            repository.delete(id);
+            repository.deleteById(id);
             response = new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
             log.info("Deleted room id = " + id);
         }
@@ -210,7 +211,7 @@ public class RoomController {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
 
-        if (repositoryType.exists(id)) {
+        if (repositoryType.existsById(id)) {
             List<Room> rooms = repository.findByRoomTypeAndVacant(id, vacant);
             response = new ResponseEntity<>(rooms, headers, HttpStatus.OK);
             log.info("Successfully get room id = " + id);

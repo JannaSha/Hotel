@@ -65,6 +65,12 @@
             <artifactId>spring-kafka</artifactId>
             <version>2.1.6.RELEASE</version>
         </dependency>
+
+        <dependency>
+            <groupId>com</groupId>
+            <artifactId>objects</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>

@@ -1,7 +1,6 @@
 package com.orders.controllers;
 
 
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.orders.TokenManager;
 import com.orders.models.Order;
 import com.orders.models.Token;
@@ -14,18 +13,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import sun.net.www.http.HttpClient;
+
 
 import javax.validation.Valid;
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 
+@Service
 @RestController
 @RequestMapping(value = "/order" )
 public class OrderController {
@@ -34,7 +31,6 @@ public class OrderController {
     private OrderRepository repository;
     @Autowired
     private TokenRepository tokenRepository;
-
 
     private static final Logger log = Logger.getLogger(OrderController.class);
 
@@ -77,7 +73,7 @@ public class OrderController {
         headers.add("Content-Type", "application/json;charset=UTF-8");
         order.setOrderDate(new Timestamp(System.currentTimeMillis()));
 
-        if (!repository.exists(order.getId())) {
+        if (!repository.existsById(order.getId())) {
             if (repository.save(order) != null) {
                 headers.setLocation(ServletUriComponentsBuilder
                         .fromCurrentServletMapping().path("/order/{id}").build()
@@ -184,7 +180,7 @@ public class OrderController {
         ResponseEntity<Order> response;
         HttpHeaders headers = new HttpHeaders();
 
-        if (!repository.exists(id)) {
+        if (!repository.existsById(id)) {
 //            response = new ResponseEntity<>(getJSONObject("Error modify order, room is not found id = " + id),
 //                    headers, HttpStatus.NOT_FOUND);
             response = new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -209,14 +205,14 @@ public class OrderController {
             return checkToken(header);
 
         ResponseEntity<Order> response;
-        if (!repository.exists(id)) {
+        if (!repository.existsById(id)) {
 //            response = new ResponseEntity<>(getJSONObject("Error trying deleting order id = " + id),
 //                    new HttpHeaders(), HttpStatus.NOT_FOUND);
             response = new ResponseEntity<>(HttpStatus.NOT_FOUND);
             log.error("Error trying deleting order id = " + id);
         }
         else {
-            repository.delete(id);
+            repository.deleteById(id);
             response = new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
             log.info("Successfully delete order id = " + id);
         }

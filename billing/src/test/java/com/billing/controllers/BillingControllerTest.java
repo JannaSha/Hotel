@@ -59,8 +59,8 @@ public class BillingControllerTest {
     @Test
     public void shouldFindBillById() {
         Billing billing = new Billing(1L, 123456789, new BigDecimal(123));
-        Mockito.when(billRepository.exists(1L)).thenReturn(true);
-        Mockito.when(billRepository.findOne(1L)).thenReturn(billing);
+        Mockito.when(billRepository.existsById(1L)).thenReturn(true);
+        Mockito.when(billRepository.findById(1L)).thenReturn(Optional.of(billing));
         try {
             mockMvc.perform(get("/billing/1"))
                     .andExpect(status().isOk())
@@ -75,7 +75,7 @@ public class BillingControllerTest {
 
     @Test
     public void shouldNotFindBillById() {
-        Mockito.when(billRepository.exists(1L)).thenReturn(false);
+        Mockito.when(billRepository.existsById(1L)).thenReturn(false);
         try {
             mockMvc.perform(get("/billing/1"))
                     .andExpect(status().isNotFound())
@@ -127,8 +127,8 @@ public class BillingControllerTest {
     @Test
     public void shouldDeleteBillingById() {
         Billing billing = new Billing(1L, 123456789, new BigDecimal(123));
-        Mockito.when(billRepository.exists(1L)).thenReturn(true);
-        Mockito.doNothing().when(billRepository).delete(1L);
+        Mockito.when(billRepository.existsById(1L)).thenReturn(true);
+        Mockito.doNothing().when(billRepository).deleteById(1L);
         try {
             mockMvc.perform(delete(String.format("/billing/delete/%d", billing.getId())))
                     .andExpect(status().isOk());
@@ -140,7 +140,7 @@ public class BillingControllerTest {
     @Test
     public void shouldNotDeleteBillById() {
         long billId = 1L;
-        Mockito.when(billRepository.exists(billId)).thenReturn(false);
+        Mockito.when(billRepository.existsById(billId)).thenReturn(false);
         try {
             mockMvc.perform(delete(String.format("/billing/delete/%d", billId)))
                     .andExpect(status().isNotFound());

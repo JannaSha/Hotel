@@ -171,8 +171,8 @@ public class OrdersControllerTest {
     public void shouldDeleteUserById() {
         Order order = new Order(1, 100, 2, Timestamp.valueOf("2017-01-01 14:14:14"), 1, 3,
                 Timestamp.valueOf("2017-01-01 14:14:14"), new BigDecimal(123));
-        Mockito.when(orderRepository.exists(order.getId())).thenReturn(true);
-        Mockito.doNothing().when(orderRepository).delete(order.getId());
+        Mockito.when(orderRepository.existsById(order.getId())).thenReturn(true);
+        Mockito.doNothing().when(orderRepository).deleteById(order.getId());
         try {
             mockMvc.perform(delete(String.format("/order/delete/%d", order.getId())))
                     .andExpect(status().isOk());
@@ -184,7 +184,7 @@ public class OrdersControllerTest {
     @Test
     public void shouldNotDeleteUserById() {
         long roomId = 1L;
-        Mockito.when(orderRepository.exists(roomId)).thenReturn(false);
+        Mockito.when(orderRepository.existsById(roomId)).thenReturn(false);
         try {
             mockMvc.perform(delete(String.format("/order/delete/%d", roomId)))
                     .andExpect(status().isNotFound());
@@ -203,7 +203,7 @@ public class OrdersControllerTest {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        Mockito.when(orderRepository.exists(1L)).thenReturn(false);
+        Mockito.when(orderRepository.existsById(1L)).thenReturn(false);
         Mockito.when(orderRepository.save(any(Order.class))).thenReturn(order);
         try {
             mockMvc.perform(post("/order/create")
@@ -236,7 +236,7 @@ public class OrdersControllerTest {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        Mockito.when(orderRepository.exists(1L)).thenReturn(false);
+        Mockito.when(orderRepository.existsById(1L)).thenReturn(false);
         Mockito.when(orderRepository.save(any(Order.class))).thenReturn(null);
         try {
             mockMvc.perform(post("/order/create")
@@ -260,7 +260,7 @@ public class OrdersControllerTest {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        Mockito.when(orderRepository.exists(1L)).thenReturn(true);
+        Mockito.when(orderRepository.existsById(1L)).thenReturn(true);
         try {
             mockMvc.perform(post("/order/create")
                     .content(json)

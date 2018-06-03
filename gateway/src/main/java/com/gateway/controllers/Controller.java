@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gateway.models.*;
 import com.gateway.clients.*;
+import com.object.OrderKafka;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -57,7 +58,9 @@ public class Controller {
 
     @RequestMapping(method=RequestMethod.GET, value="/producer")
     public String producer(@RequestParam("data")String data){
-        producer.send(data);
+        OrderKafka orderKafka = new OrderKafka(1, 1, 1,
+                Timestamp.valueOf("2018-01-01 00:00:00"), new BigDecimal(1234));
+        producer.send(orderKafka);
         System.out.println("Done");
         return "Done";
     }

@@ -3,14 +3,15 @@ package com.statistic.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.object.OrderKafka;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MessageStorage {
 
-    private List<String> storage = new ArrayList<String>();
+    private List<OrderKafka> storage = new ArrayList<>();
 
-    public void put(String message){
+    public void put(OrderKafka message){
         storage.add(message);
     }
 

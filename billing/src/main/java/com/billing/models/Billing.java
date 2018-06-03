@@ -1,13 +1,10 @@
 package com.billing.models;
 
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
-import javax.validation.constraints.Positive;
 import java.io.Serializable;
 import java.math.BigDecimal;
 

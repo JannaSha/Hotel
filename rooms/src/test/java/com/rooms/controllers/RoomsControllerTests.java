@@ -62,8 +62,8 @@ public class RoomsControllerTests {
     @Test
     public void shouldFindRoomById() {
         Room room = new Room(100, 1, true);
-        Mockito.when(roomsRepository.exists(room.getId())).thenReturn(true);
-        Mockito.when(roomsRepository.findOne(room.getId())).thenReturn(room);
+        Mockito.when(roomsRepository.existsById(room.getId())).thenReturn(true);
+        Mockito.when(roomsRepository.findById(room.getId())).thenReturn(Optional.of(room));
         try {
             mockMvc.perform(get("/room/100"))
                     .andExpect(status().isOk())
@@ -78,7 +78,7 @@ public class RoomsControllerTests {
 
     @Test
     public void shouldNotFindRoomById() {
-        Mockito.when(roomsRepository.exists(100L)).thenReturn(false);
+        Mockito.when(roomsRepository.existsById(100L)).thenReturn(false);
         try {
             mockMvc.perform(get("/room/100"))
                     .andExpect(status().isNotFound())
@@ -137,7 +137,7 @@ public class RoomsControllerTests {
     public void shouldFindRoomsByTypeId() {
         List<Room> rooms = new LinkedList<>();
         rooms.add(new Room(100L,1, true));
-        Mockito.when(roomsTypesRepository.exists(1L)).thenReturn(true);
+        Mockito.when(roomsTypesRepository.existsById(1L)).thenReturn(true);
         Mockito.when(roomsRepository.findByRoomTypeAndVacant(1L, true)).thenReturn(rooms);
         try {
             mockMvc.perform(get("/room/roomtype/1?vacant=true"))
@@ -152,7 +152,7 @@ public class RoomsControllerTests {
 
     @Test
     public void shouldNotFindRoomsByTypeId() {
-        Mockito.when(roomsTypesRepository.exists(1L)).thenReturn(false);
+        Mockito.when(roomsTypesRepository.existsById(1L)).thenReturn(false);
         try {
             mockMvc.perform(get("/room/roomtype/1?vacant=false"))
                     .andExpect(status().isNotFound())
@@ -165,8 +165,8 @@ public class RoomsControllerTests {
     @Test
     public void shouldDeleteRoomById() {
         Room room = new Room(100, 1, true);
-        Mockito.when(roomsRepository.exists(room.getId())).thenReturn(true);
-        Mockito.doNothing().when(roomsRepository).delete(room.getId());
+        Mockito.when(roomsRepository.existsById(room.getId())).thenReturn(true);
+        Mockito.doNothing().when(roomsRepository).deleteById(room.getId());
         try {
             mockMvc.perform(delete(String.format("/room/delete/%d", room.getId())))
                     .andExpect(status().isOk());
@@ -178,7 +178,7 @@ public class RoomsControllerTests {
     @Test
     public void shouldNotDeleteRoomById() {
         long roomId = 1L;
-        Mockito.when(roomsRepository.exists(roomId)).thenReturn(false);
+        Mockito.when(roomsRepository.existsById(roomId)).thenReturn(false);
         try {
             mockMvc.perform(delete(String.format("/room/delete/%d", roomId)))
                     .andExpect(status().isNotFound());
@@ -195,9 +195,9 @@ public class RoomsControllerTests {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        Mockito.when(roomsRepository.exists(100L)).thenReturn(false);
+        Mockito.when(roomsRepository.existsById(100L)).thenReturn(false);
         Mockito.when(roomsRepository.save(any(Room.class))).thenReturn(room);
-        Mockito.when(roomsTypesRepository.exists(1L)).thenReturn(true);
+        Mockito.when(roomsTypesRepository.existsById(1L)).thenReturn(true);
         try {
             mockMvc.perform(post("/room/create")
                     .content(json)
@@ -222,7 +222,7 @@ public class RoomsControllerTests {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        Mockito.when(roomsRepository.exists(100L)).thenReturn(true);
+        Mockito.when(roomsRepository.existsById(100L)).thenReturn(true);
         try {
             mockMvc.perform(post("/room/create")
                     .content(json)
@@ -244,9 +244,9 @@ public class RoomsControllerTests {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        Mockito.when(roomsRepository.exists(100L)).thenReturn(false);
+        Mockito.when(roomsRepository.existsById(100L)).thenReturn(false);
         Mockito.when(roomsRepository.save(any(Room.class))).thenReturn(room);
-        Mockito.when(roomsTypesRepository.exists(1L)).thenReturn(false);
+        Mockito.when(roomsTypesRepository.existsById(1L)).thenReturn(false);
         try {
             mockMvc.perform(post("/room/create")
                     .content(json)

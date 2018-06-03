@@ -20,6 +20,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/user" )
@@ -113,7 +114,7 @@ public class UserController {
         ResponseEntity<User> response;
         HttpHeaders headers = new HttpHeaders();
 
-        if (!repository.exists(id)) {
+        if (!repository.existsById(id)) {
 //            response = new ResponseEntity<>(
 //                    getJSONObject("Error modify user, user is not found passport number = " + id),
 //                    headers, HttpStatus.NOT_FOUND);
@@ -169,9 +170,9 @@ public class UserController {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json;charset=UTF-8");
 
-        if (repository.exists(id)) {
-            User user = repository.findOne(id);
-            response = new ResponseEntity<>(user, headers, HttpStatus.OK);
+        if (repository.existsById(id)) {
+            Optional<User> user = repository.findById(id);
+            response = new ResponseEntity<>(user.get(), headers, HttpStatus.OK);
             log.info("Get user successfully id = " + id);
         }
         else {
@@ -237,14 +238,14 @@ public class UserController {
 
         ResponseEntity<User> response;
 
-        if (!repository.exists(id)) {
+        if (!repository.existsById(id)) {
 //            response = new ResponseEntity<>(getJSONObject("Error trying deleting user passport number = " + id),
 //                    HttpStatus.NOT_FOUND);
             response = new ResponseEntity<>(HttpStatus.NOT_FOUND);
             log.error("Error trying deleting user passport number = " + id);
         }
         else {
-            repository.delete(id);
+            repository.deleteById(id);
             response = new ResponseEntity<>(HttpStatus.OK);
             log.info("Successfully delete user passport number = " + id);
         }

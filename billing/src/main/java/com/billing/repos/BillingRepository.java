@@ -11,4 +11,7 @@ import java.util.List;
 @Repository
 public interface BillingRepository extends CrudRepository<Billing, Long> {
     List<Billing> findAll(Pageable pageable);
+//    boolean exists(long id);
+//    Billing findOne(long id);
+//    void delete(long id);
 }

@@ -2,7 +2,6 @@ package com.auth;
 
 import com.auth.model.Auth;
 import com.auth.service.AuthService;
-import com.auth.service.MyUserDetailsService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,7 +15,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 @EnableDiscoveryClient
 @ComponentScan("com.auth")
 public class AuthApplication {
-
+//
 //    @Bean
 //    public CommandLineRunner init(AuthService service)  {
 //        Auth user = new Auth();

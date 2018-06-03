@@ -56,8 +56,8 @@ public class UserControllerTest {
     @Test
     public void shouldFindUserById() {
         User user = new User(1L,12345678L, "Janna", "Shapoval", 0, "username");
-        Mockito.when(userRepository.exists(1L)).thenReturn(true);
-        Mockito.when(userRepository.findOne(1L)).thenReturn(user);
+        Mockito.when(userRepository.existsById(1L)).thenReturn(true);
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         try {
             mockMvc.perform(get("/user/1"))
                     .andExpect(status().isOk())
@@ -73,7 +73,7 @@ public class UserControllerTest {
 
     @Test
     public void shouldNotFindUserById() {
-        Mockito.when(userRepository.exists(1L)).thenReturn(false);
+        Mockito.when(userRepository.existsById(1L)).thenReturn(false);
         try {
             mockMvc.perform(get("/user/1"))
                     .andExpect(status().isNotFound())
@@ -160,8 +160,8 @@ public class UserControllerTest {
     @Test
     public void shouldDeleteUserById() {
         User user = new User(1L,12345678L, "Janna", "Shapoval", 0, "username");
-        Mockito.when(userRepository.exists(1L)).thenReturn(true);
-        Mockito.doNothing().when(userRepository).delete(1L);
+        Mockito.when(userRepository.existsById(1L)).thenReturn(true);
+        Mockito.doNothing().when(userRepository).deleteById(1L);
         try {
             mockMvc.perform(delete(String.format("/user/delete/%d", user.getId())))
                     .andExpect(status().isOk());
@@ -173,7 +173,7 @@ public class UserControllerTest {
     @Test
     public void shouldNotDeleteUserById() {
         long userId = 1L;
-        Mockito.when(userRepository.exists(userId)).thenReturn(false);
+        Mockito.when(userRepository.existsById(userId)).thenReturn(false);
         try {
             mockMvc.perform(delete(String.format("/user/delete/%d", userId)))
                     .andExpect(status().isNotFound());

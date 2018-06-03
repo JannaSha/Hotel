@@ -3,7 +3,6 @@ package com.rooms.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.rooms.controllers.RoomTypeController;
 import com.rooms.models.RoomType;
 import com.rooms.repo.RoomsTypesRepository;
 import org.junit.Before;
@@ -60,8 +59,8 @@ public class RoomTypeControllerTest {
     public void shouldFindRoomTypeById() {
         RoomType roomType = new RoomType(15, 15, "first",
                 "description", new BigDecimal(123), 2);
-        Mockito.when(roomsTypesRepository.exists(6L)).thenReturn(true);
-        Mockito.when(roomsTypesRepository.findOne(roomType.getId())).thenReturn(roomType);
+        Mockito.when(roomsTypesRepository.existsById(6L)).thenReturn(true);
+        Mockito.when(roomsTypesRepository.findById(roomType.getId())).thenReturn(Optional.of(roomType));
         try {
             mockMvc.perform(get("/roomtype/6"))
                     .andExpect(status().isOk())
@@ -80,7 +79,7 @@ public class RoomTypeControllerTest {
 
     @Test
     public void shouldNotFindRoomById() {
-        Mockito.when(roomsTypesRepository.exists(6L)).thenReturn(false);
+        Mockito.when(roomsTypesRepository.existsById(6L)).thenReturn(false);
         try {
             mockMvc.perform(get("/roomtype/6"))
                     .andExpect(status().isNotFound())
@@ -139,7 +138,7 @@ public class RoomTypeControllerTest {
     @Test
     public void shouldNotDeleteRoomTypeById() {
         long roomId = 1L;
-        Mockito.when(roomsTypesRepository.exists(roomId)).thenReturn(false);
+        Mockito.when(roomsTypesRepository.existsById(roomId)).thenReturn(false);
         try {
             mockMvc.perform(delete(String.format("/roomtype/delete/%d", roomId)))
                     .andExpect(status().isNotFound());
@@ -151,8 +150,8 @@ public class RoomTypeControllerTest {
     @Test
     public void shouldDeleteUserById() {
         long roomId = 1L;
-        Mockito.when(roomsTypesRepository.exists(roomId)).thenReturn(true);
-        Mockito.doNothing().when(roomsTypesRepository).delete(roomId);
+        Mockito.when(roomsTypesRepository.existsById(roomId)).thenReturn(true);
+        Mockito.doNothing().when(roomsTypesRepository).deleteById(roomId);
         try {
             mockMvc.perform(delete(String.format("/roomtype/delete/%d", roomId)))
                     .andExpect(status().isOk());

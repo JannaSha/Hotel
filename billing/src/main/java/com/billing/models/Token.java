@@ -5,8 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import javax.persistence.*;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import java.io.Serializable;
-import java.sql.Timestamp;
+
 
 @Entity
 @Table(name = "tokens")
@@ -21,9 +20,7 @@ public class Token {
     @Column(name="value")
     private String value;
 
-    public Token() {
-
-    }
+    public Token(){}
 
     public Token(String token) {
         this.value = token;
