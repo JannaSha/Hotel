@@ -14,12 +14,14 @@ public class KafkaConsumer {
     private static final Logger log = LoggerFactory.getLogger(KafkaProducer.class);
 
     @Autowired
-    MessageStorage storage;
+    private MessageStorage storage;
+    @Autowired
+    private StatisticService statisticService;
 
     @KafkaListener(topics="${app.topic.order}")
     public void processMessage(OrderKafka content) {
-        log.info("received content = '{}'", content);
-        System.out.println("MESSAGE = " + content.toString());
+        log.info("received content = '{}'", content.toString());
+        statisticService.saveOrderKafka(content);
         storage.put(content);
     }
 }

@@ -1,7 +1,5 @@
 package com.gateway.clients;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gateway.TokenManage;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
@@ -10,7 +8,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.sql.Timestamp;
-import java.util.function.Supplier;
+
 
 public abstract class TokenClient {
     Timestamp lastTokenTime;

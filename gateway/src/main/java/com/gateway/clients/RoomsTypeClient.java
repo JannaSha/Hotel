@@ -3,13 +3,7 @@ package com.gateway.clients;
 
 import com.gateway.models.RoomType;
 import org.springframework.http.*;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
-
-import javax.persistence.criteria.CriteriaBuilder;
-import java.util.List;
 
 
 public class RoomsTypeClient extends TokenClient {

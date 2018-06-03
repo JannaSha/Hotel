@@ -2,17 +2,8 @@ package com.gateway.clients;
 
 
 import com.gateway.models.Order;
-import com.netflix.ribbon.proxy.annotation.Http;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.http.*;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.List;
 
 
 public class OrdersClient extends TokenClient {

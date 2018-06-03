@@ -28,7 +28,6 @@ public class UserController {
 
     @Autowired
     UserRepository repository;
-    String currentToken;
     @Autowired
     private TokenRepository tokenRepository;
     private static final Logger log = Logger.getLogger(UserController.class);

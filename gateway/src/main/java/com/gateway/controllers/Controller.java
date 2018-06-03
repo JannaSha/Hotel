@@ -48,6 +48,7 @@ public class Controller {
     private RoomClient roomClient = new RoomClient();
     private OrdersClient ordersClient = new OrdersClient();
     private AuthClient authClient = new AuthClient();
+    private StatisticClient statisticClient = new StatisticClient();
 
     private static final Logger log = Logger.getLogger(Controller.class);
 
@@ -55,15 +56,6 @@ public class Controller {
 
     @Autowired
     KafkaProducer producer;
-
-    @RequestMapping(method=RequestMethod.GET, value="/producer")
-    public String producer(@RequestParam("data")String data){
-        OrderKafka orderKafka = new OrderKafka(1, 1, 1,
-                Timestamp.valueOf("2018-01-01 00:00:00"), new BigDecimal(1234));
-        producer.send(orderKafka);
-        System.out.println("Done");
-        return "Done";
-    }
 
     private BigDecimal getPrice(Integer nightAmount, BigDecimal nightPrice, Integer userOrderAmount) {
         BigDecimal cost = nightPrice.multiply(new BigDecimal(nightAmount));
@@ -170,9 +162,68 @@ public class Controller {
         });
     }
 
+    /* Получение статистики по типам комнат */
+    @GetMapping(value = "/statistic/roomtype")
+    public Object getRoomReport(@RequestHeader HttpHeaders head) {
+        if (!head.containsKey("scope")) {
+            log.error("/statistic/roomtype: No scope in header");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        if (!head.get("scope").get(0).equals("ui")) {
+            log.error("/statistic/roomtype: Scope does not equal ui or api");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        ResponseEntity<Object> responseEntity = handle(() -> statisticClient.getRoomReport(), "statistic");
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            log.info("GET/statistic/roomtype: Get statistic of room types successfully. " +
+                    responseEntity.getStatusCode().toString());
+        }
+        return responseEntity;
+    }
+
+    /* Получение статистики по пользователям */
+    @GetMapping(value = "/statistic/users")
+    public Object getUserReport(@RequestHeader HttpHeaders head) {
+        if (!head.containsKey("scope")) {
+            log.error("/statistic/users: No scope in header");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        if (!head.get("scope").get(0).equals("ui")) {
+            log.error("/statistic/users: Scope does not equal ui or api");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        ResponseEntity<Object> responseEntity = handle(() -> statisticClient.getUserReport(), "statistic");
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            log.info("GET/statistic/users: Get statistic of users successfully. " +
+                    responseEntity.getStatusCode().toString());
+        }
+        return responseEntity;
+    }
+
+    /* Получение статистики по авторизации пользрвателей */
+    @GetMapping(value = "/statistic/auth")
+    public Object getAuthReport(@RequestHeader HttpHeaders head) {
+        if (!head.containsKey("scope")) {
+            log.error("/statistic/auth: No scope in header");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        if (!head.get("scope").get(0).equals("ui")) {
+            log.error("/statistic/auth: Scope does not equal ui or api");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        ResponseEntity<Object> responseEntity = handle(() -> statisticClient.getAuthReport(), "statistic");
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            log.info("GET/statistic/auth: Get statistic of auth successfully. " +
+                    responseEntity.getStatusCode().toString());
+        }
+        return responseEntity;
+    }
+
     /* Получение всех комнат в отеле */
-    @RequestMapping(method = RequestMethod.GET, value = "/rooms",
-            params = {"page", "size"}, produces="application/json")
+    @GetMapping(value = "/rooms", params = {"page", "size"}, produces="application/json")
     public Object getAllRooms(@RequestParam("page") Integer page,
                               @RequestParam("size") Integer size,
                               @RequestHeader HttpHeaders head) {
@@ -192,8 +243,7 @@ public class Controller {
     }
 
     /* Получение всех типов комнат в отеле */
-    @RequestMapping(method = RequestMethod.GET, value = "/roomtypes",
-            params = {"page", "size"}, produces="application/json")
+    @GetMapping(value = "/roomtypes", params = {"page", "size"}, produces="application/json")
     public Object getAllRoomTypes(@RequestParam("page") Integer page,
                                   @RequestParam("size") Integer size,
                                   @RequestHeader HttpHeaders header){
@@ -241,7 +291,7 @@ public class Controller {
 
     /* Получение описания заказа авторизованным пользователем */
     /* Права для клиента scope = ui */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/order/{orderId}", produces="application/json")
+    @GetMapping(value = "/user/{username}/order/{orderId}", produces="application/json")
     public ResponseEntity<Order> getUserOrder(@PathVariable("username") String username,
                                               @PathVariable("orderId") long orderId,
                                               @RequestHeader HttpHeaders header) {
@@ -294,7 +344,7 @@ public class Controller {
     }
 
     /* Получение всех заказов авторизованного пользователя */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/orders", produces="application/json")
+    @GetMapping(value = "/user/{username}/orders", produces="application/json")
     public ResponseEntity<List<OrderGetter>> getAllUserOrders(@PathVariable("username") String username,
                                                               @RequestHeader HttpHeaders header) {
 
@@ -391,8 +441,7 @@ public class Controller {
 
 
     /* Создание заказа для авторизованного пользователя */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/order",
-            consumes = "application/json", produces="application/json")
+    @PostMapping(value = "/user/{username}/order", consumes = "application/json", produces="application/json")
     public ResponseEntity<Order> createOrder(@PathVariable("username") String username,
                                              @RequestBody @Valid OrderCreator orderCreator,
                                              @RequestHeader HttpHeaders header) {
@@ -501,6 +550,11 @@ public class Controller {
         order = (Order) orderResponseEntityTemp.getBody();
         log.info(String.format("POST/user/%d/order: Order = %d create successfully. %s",
                 userId, order.getId(), orderResponseEntityTemp.getStatusCode().toString()));
+
+        OrderKafka orderKafka = new OrderKafka(order.getUserId(), order.getNightAmount(),
+                roomTypeResponse.getBody().getId(), order.getArrivalDate(), order.getCost());
+        producer.send(orderKafka);
+        System.out.println("Order kafka send");
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(ServletUriComponentsBuilder
                 .fromCurrentServletMapping().path("hotel/user/{userId}/order/{orderId}").build()
@@ -510,7 +564,7 @@ public class Controller {
     }
 
     /* Оплата существующего заказа авторизованным пользователем */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/order/{orderId}/billing",
+    @PostMapping(value = "/user/{username}/order/{orderId}/billing",
             consumes = "application/json", produces="application/json")
     public ResponseEntity<Order> billOrder(@PathVariable("username") String username, @PathVariable("orderId") long orderId,
                                            @RequestBody @Valid BillMaker bill, @RequestHeader HttpHeaders header)
@@ -602,7 +656,7 @@ public class Controller {
     }
 
     /* Изменение сущесвующего заказа авторизованным пользователем */
-    @RequestMapping(method = RequestMethod.PUT, value = "/user/{username}/order/{orderId}",
+    @PutMapping(value = "/user/{username}/order/{orderId}",
             produces="application/json", consumes = "application/json")
     public ResponseEntity<Order> modifyUserOrder(@PathVariable("username") String username,
                                                  @PathVariable("orderId") long orderId,
@@ -727,7 +781,7 @@ public class Controller {
     }
 
     /* Закрытие заказа администратором */
-    @RequestMapping(method = RequestMethod.PUT, value = "user/{userId}/order/{orderId}/close",
+    @PutMapping(value = "user/{userId}/order/{orderId}/close",
             consumes = "application/json", produces="application/json")
     public ResponseEntity<Order> closeOrder(@PathVariable("userId") long userId, @PathVariable("orderId") long orderId)
     {
@@ -794,7 +848,7 @@ public class Controller {
     }
 
     /* Удаление заказа авторизованным пользователем */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/order/{orderId}")
+    @DeleteMapping(value = "/user/{username}/order/{orderId}")
     public ResponseEntity<Order> deleteOrder(@PathVariable("username") String username,
                                              @PathVariable("orderId") long orderId,
                                              @RequestHeader HttpHeaders header) {
@@ -861,7 +915,7 @@ public class Controller {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/token", produces="application/json")
+    @GetMapping(value = "/token", produces="application/json")
     public ResponseEntity<Object> make_auth(@RequestHeader HttpHeaders header) {
         if (!header.containsKey("password") || !header.containsKey("username") || !header.containsKey("authorization")) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
