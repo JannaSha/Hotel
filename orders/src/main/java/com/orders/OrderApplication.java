@@ -9,7 +9,6 @@ import org.springframework.context.annotation.PropertySource;
 @SpringBootApplication
 @EnableDiscoveryClient
 @ComponentScan("com.orders")
-@PropertySource("classpath:db-config-order.properties")
 public class OrderApplication {
 
     public static void main(String[] args){

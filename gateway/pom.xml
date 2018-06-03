@@ -26,6 +26,8 @@
         <spring.cloud.dependencies.version>Finchley.M8</spring.cloud.dependencies.version>
         <com.h2database.h2>1.4.197</com.h2database.h2>
         <spring.boot.devtools>2.0.0.RELEASE</spring.boot.devtools>
+        <com.object.version>1.0.0</com.object.version>
+        <spring.kafka.version>2.1.6.RELEASE</spring.kafka.version>
     </properties>
 
     <dependencies>
@@ -63,13 +65,13 @@
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
-            <version>2.1.6.RELEASE</version>
+            <version>${spring.kafka.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com</groupId>
             <artifactId>objects</artifactId>
-            <version>1.0.0</version>
+            <version>${com.object.version}</version>
         </dependency>
     </dependencies>
 

@@ -554,7 +554,7 @@ public class Controller {
         OrderKafka orderKafka = new OrderKafka(order.getUserId(), order.getNightAmount(),
                 roomTypeResponse.getBody().getId(), order.getArrivalDate(), order.getCost());
         producer.send(orderKafka);
-        System.out.println("Order kafka send");
+        log.info("Order send in kafka");
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(ServletUriComponentsBuilder
                 .fromCurrentServletMapping().path("hotel/user/{userId}/order/{orderId}").build()
@@ -924,14 +924,20 @@ public class Controller {
         String username = header.get("username").get(0);
         String authorization = header.get("authorization").get(0);
 
+        OrderKafka orderKafka = new OrderKafka(username, password, new Timestamp(System.currentTimeMillis()), 0);
         ResponseEntity<String> authResponse = handle(() -> authClient.makeAuth(password, username, authorization), "auth");
         if (authResponse.getStatusCode() == HttpStatus.OK) {
             HttpHeaders headers = new HttpHeaders();
             headers.add("Content-Type", "application/json;charset=UTF-8");
             log.info("/token: token get successfully " + HttpStatus.OK.toString());
+            orderKafka.setIsSuccess(1);
+            producer.send(orderKafka);
+            log.info("Auth send in kafka");
             return new ResponseEntity<>(authResponse.getBody(), headers, HttpStatus.OK);
         }
         log.error("/token error getting token " + authResponse.getStatusCode().toString());
+        producer.send(orderKafka);
+        log.info("Auth send in kafka");
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
