@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block head %}
+{{ block.super }}
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/room_list.css' %}">
+ {% endblock head %}
+
+{% block title %}Отчет: Авторизация пользователей{% endblock title %}
+
+{% block body %}
+{% if error %}
+  <h3 class="error-message">Ошибка: {{ error }}</h3>
+{% else %}
+<div class="row rooms">
+<div class="room-icon col-xs-12 col-sm-12 col-md-12 col-lg-12">
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Login</th>
+        <th scope="col">Password</th>
+        <th scope="col">Is success</th>
+        <th scope="col">Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in reports %}
+        <tr>
+          <td>{{ row.login }}</td>
+          <td>{{ row.password }}</td>
+          <td>{{ row.isSuccess }}</td>
+          <td>{{ row.date }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+</div>
+{% endif %}
+{% endblock body %}

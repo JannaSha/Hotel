@@ -13,4 +13,7 @@ urlpatterns = [
     re_path(r'^order/(\d{0,10000})$', views.show_order, name='show_order'),
     re_path(r'^order/(\d{0,10000})/delete$', views.delete_order, name='delete_order'),
     re_path(r'^auth$', views.auth_user, name='auth'),
+    re_path(r'^statistic/auth', views.show_statistic_auth, name='statistic/auth'),
+    re_path(r'^statistic/user', views.show_statistic_user, name='statistic/user'),
+    re_path(r'^statistic/room', views.show_statistic_room, name='statistic/room'),
 ]

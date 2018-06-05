@@ -61,6 +61,30 @@ def show_rooms_type(request, page, size):
     context = {'rooms':rooms}
     return render(request, 'hotel/index.html', context)
 
+def show_statistic_auth(request):
+    url = 'http://localhost:1212/hotel/statistic/auth'
+    header = {'scope': 'ui'}
+    response = requests.get(url, headers=header)
+    report = response.json()
+    context = {'reports': report}
+    return render(request, 'hotel/reports.html', context)
+
+def show_statistic_user(request):
+    url = 'http://localhost:1212/hotel/statistic/users'
+    header = {'scope': 'ui'}
+    response = requests.get(url, headers=header)
+    report = response.json()
+    context = {'reports': report}
+    return render(request, 'hotel/reports_user.html', context)
+
+def show_statistic_room(request):
+    url = 'http://localhost:1212/hotel/statistic/roomtype'
+    header = {'scope': 'ui'}
+    response = requests.get(url, headers=header)
+    report = response.json()
+    context = {'reports': report}
+    return render(request, 'hotel/reports_room.html', context)
+
 def show_orders(request):
     if not 'username' in request.COOKIES or not 'password' in request.COOKIES or not 'access_token' in request.COOKIES or \
         not 'refresh_token' in request.COOKIES or not 'scope' in request.COOKIES:
