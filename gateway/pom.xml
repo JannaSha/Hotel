@@ -24,7 +24,7 @@
         <mockito.core.version>2.2.7</mockito.core.version>
         <starter.netflix.eureka.client>1.4.4.RELEASE</starter.netflix.eureka.client>
         <spring.cloud.dependencies.version>Finchley.M8</spring.cloud.dependencies.version>
-        <com.h2database.h2>1.4.197</com.h2database.h2>
+        <com.h2database.h2>2.0.206</com.h2database.h2>
         <spring.boot.devtools>2.0.0.RELEASE</spring.boot.devtools>
         <com.object.version>1.0.0</com.object.version>
         <spring.kafka.version>2.1.6.RELEASE</spring.kafka.version>
