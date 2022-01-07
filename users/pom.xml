@@ -24,7 +24,7 @@
         <mockito.core.version>2.2.7</mockito.core.version>
         <starter.netflix.eureka.client>1.4.4.RELEASE</starter.netflix.eureka.client>
         <spring.cloud.dependencies.version>Finchley.M8</spring.cloud.dependencies.version>
-        <com.h2database.h2>1.4.197</com.h2database.h2>
+        <com.h2database.h2>2.0.206</com.h2database.h2>
         <spring.boot.devtools>2.0.0.RELEASE</spring.boot.devtools>
         <mockito-core.version>2.18.3</mockito-core.version>
         <spring-boot-starter-test.version>2.0.2.RELEASE</spring-boot-starter-test.version>
